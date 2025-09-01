@@ -7,3 +7,14 @@ python-dotenv
 pydantic
 pydantic-settings
 python-multipart
+
+# Malaysian Motor Insurance Comparator dependencies
+supabase
+crawl4ai
+tavily-python
+weasyprint
+jinja2
+aiohttp
+beautifulsoup4
+lxml
+html5lib

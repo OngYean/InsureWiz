@@ -2,3 +2,4 @@
 # Nah actually created this because git doesn't allow empty folders
 .env
 __pycache__/
+/.venv

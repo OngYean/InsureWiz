@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     ai_model: str = "gemini-2.0-flash"
     ai_temperature: float = 0.7
     
+    # Comparator Configuration
+    tavily_api_key: str = os.getenv("TAVILY_API_KEY", "")
+    supabase_url: str = os.getenv("SUPABASE_URL", "")
+    supabase_key: str = os.getenv("SUPABASE_KEY", "")
+    
     # Security
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]

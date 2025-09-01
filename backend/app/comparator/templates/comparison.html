@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor Insurance Comparison Report</title>
+    <style>
+        /* PDF-optimized styles */
+        @page {
+            size: A4;
+            margin: 1in;
+            @top-center {
+                content: "Motor Insurance Comparison Report";
+                font-size: 10pt;
+                color: #666;
+            }
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 10pt;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid {{ (branding and branding.primary_color) or '#2563eb' }};
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: {{ (branding and branding.primary_color) or '#2563eb' }};
+            font-size: 24pt;
+            margin: 0 0 10px 0;
+        }
+        
+        .header .subtitle {
+            font-size: 14pt;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .customer-info {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .customer-info h2 {
+            color: {{ branding.primary_color or '#2563eb' }};
+            font-size: 16pt;
+            margin: 0 0 10px 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .info-item {
+            margin-bottom: 5px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .section h2 {
+            color: {{ branding.primary_color or '#2563eb' }};
+            font-size: 18pt;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .section h3 {
+            color: #374151;
+            font-size: 14pt;
+            margin: 20px 0 10px 0;
+        }
+        
+        .recommendations {
+            margin-bottom: 25px;
+        }
+        
+        .recommendation-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+        }
+        
+        .recommendation-card.rank-1 {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        
+        .recommendation-card.rank-2 {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        .recommendation-card.rank-3 {
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .rank-badge {
+            background-color: {{ branding.primary_color or '#2563eb' }};
+            color: white;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-right: 15px;
+            font-size: 12pt;
+        }
+        
+        .rank-badge.rank-1 { background-color: #10b981; }
+        .rank-badge.rank-2 { background-color: #3b82f6; }
+        .rank-badge.rank-3 { background-color: #f59e0b; }
+        
+        .insurer-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .product-name {
+            font-size: 12pt;
+            color: #6b7280;
+            margin-left: 10px;
+        }
+        
+        .score-display {
+            float: right;
+            background-color: #e5e7eb;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .strengths-weaknesses {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .strengths ul, .weaknesses ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        .strengths li {
+            color: #059669;
+            margin-bottom: 3px;
+        }
+        
+        .weaknesses li {
+            color: #dc2626;
+            margin-bottom: 3px;
+        }
+        
+        .comparison-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 10pt;
+        }
+        
+        .comparison-matrix th {
+            background-color: {{ branding.primary_color or '#2563eb' }};
+            color: white;
+            padding: 8px 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .comparison-matrix td {
+            border: 1px solid #d1d5db;
+            padding: 6px;
+            text-align: center;
+        }
+        
+        .comparison-matrix .feature-name {
+            background-color: #f9fafb;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 10px;
+        }
+        
+        .yes { 
+            color: #059669; 
+            font-weight: bold; 
+        }
+        
+        .no { 
+            color: #dc2626; 
+        }
+        
+        .available { 
+            color: #2563eb; 
+            font-weight: bold; 
+        }
+        
+        .insights-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .insights-list li {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .next-steps {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .next-steps h3 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .next-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .disclaimer {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 10pt;
+        }
+        
+        .disclaimer h3 {
+            color: #dc2626;
+            margin-top: 0;
+            font-size: 12pt;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 10pt;
+            color: #6b7280;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .highlight {
+            background-color: #fef08a;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .data-freshness {
+            font-size: 9pt;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>Motor Insurance Comparison Report</h1>
+        <div class="subtitle">{{ customer_name }}</div>
+        <div class="subtitle">{{ generated_date }} at {{ generated_time }}</div>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="customer-info">
+        <h2>Customer Profile</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Customer:</span> {{ customer_name }}
+            </div>
+            <div class="info-item">
+                <span class="info-label">Comparison Date:</span> {{ comparison_date }}
+            </div>
+            <div class="info-item">
+                <span class="info-label">Policies Analyzed:</span> {{ total_policies }}
+            </div>
+            <div class="info-item">
+                <span class="info-label">Processing Time:</span> {{ processing_time }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="section">
+        <h2>Executive Summary</h2>
+        <p><strong>Top Recommendation:</strong> <span class="highlight">{{ top_recommendation }}</span></p>
+        
+        {% if summary.takaful_options > 0 %}
+        <p><strong>Takaful Options:</strong> {{ summary.takaful_options }} Shariah-compliant policies available</p>
+        {% endif %}
+        
+        <p><strong>Coverage Distribution:</strong>
+        {% for coverage_type, count in summary.coverage_range.items() %}
+            {{ coverage_type }}: {{ count }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+        </p>
+    </div>
+
+    <!-- Top Recommendations -->
+    <div class="section recommendations">
+        <h2>Recommended Policies</h2>
+        
+        {% for recommendation in recommendations %}
+        <div class="recommendation-card rank-{{ recommendation.rank }}">
+            <div class="recommendation-header">
+                <span class="rank-badge rank-{{ recommendation.rank }}">#{{ recommendation.rank }}</span>
+                <div>
+                    <span class="insurer-name">{{ recommendation.policy.insurer }}</span>
+                    <span class="product-name">{{ recommendation.policy.product_name }}</span>
+                </div>
+                <span class="score-display">{{ "%.1f"|format(recommendation.score.total_score) }}/100</span>
+            </div>
+            
+            {% if recommendation.coverage_analysis %}
+            <p><strong>Analysis:</strong> {{ recommendation.coverage_analysis|truncate(200) }}</p>
+            {% endif %}
+            
+            <div class="strengths-weaknesses">
+                <div class="strengths">
+                    <h4>Strengths:</h4>
+                    <ul>
+                        {% for strength in recommendation.strengths[:4] %}
+                        <li>{{ strength }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="weaknesses">
+                    <h4>Considerations:</h4>
+                    <ul>
+                        {% for weakness in recommendation.weaknesses[:4] %}
+                        <li>{{ weakness }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            {% if recommendation.best_for %}
+            <p><strong>Best For:</strong> 
+                {% for scenario in recommendation.best_for[:3] %}
+                    {{ scenario }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Page Break for Matrix -->
+    {% if include_detailed_matrix %}
+    <div class="page-break"></div>
+    
+    <!-- Comparison Matrix -->
+    <div class="section">
+        <h2>Detailed Feature Comparison</h2>
+        
+        <table class="comparison-matrix">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    {% for insurer in matrix.insurers %}
+                    <th>{{ insurer|truncate(15) }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for feature in matrix.features %}
+                <tr>
+                    <td class="feature-name">{{ feature }}</td>
+                    {% for insurer in matrix.insurers %}
+                    <td class="{% if matrix.data[insurer][feature] == 'Yes' %}yes{% elif matrix.data[insurer][feature] == 'No' %}no{% elif matrix.data[insurer][feature] == 'Available' %}available{% endif %}">
+                        {{ matrix.data[insurer][feature] }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if matrix.best_coverage or matrix.best_service or matrix.best_value %}
+        <div style="margin-top: 15px;">
+            <h3>Performance Highlights:</h3>
+            {% if matrix.best_coverage %}<p><strong>Best Coverage:</strong> {{ matrix.best_coverage }}</p>{% endif %}
+            {% if matrix.best_service %}<p><strong>Best Service:</strong> {{ matrix.best_service }}</p>{% endif %}
+            {% if matrix.best_value %}<p><strong>Best Overall Value:</strong> {{ matrix.best_value }}</p>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Market Insights -->
+    {% if market_insights %}
+    <div class="section">
+        <h2>Market Insights</h2>
+        <ul class="insights-list">
+            {% for insight in market_insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- General Recommendations -->
+    {% if general_recommendations %}
+    <div class="section">
+        <h2>Expert Recommendations</h2>
+        <ul>
+            {% for recommendation in general_recommendations %}
+            <li>{{ recommendation }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Next Steps -->
+    {% if next_steps %}
+    <div class="next-steps">
+        <h3>Recommended Next Steps</h3>
+        <ol>
+            {% for step in next_steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+    {% endif %}
+
+    <!-- Custom Notes -->
+    {% if custom_notes %}
+    <div class="section">
+        <h2>Additional Notes</h2>
+        <p>{{ custom_notes }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Data Freshness -->
+    {% if data_freshness %}
+    <div class="data-freshness">
+        <strong>Data Last Updated:</strong>
+        {% for insurer, freshness in data_freshness.items() %}
+            {{ insurer }}: {{ freshness }}{% if not loop.last %} | {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+        <h3>Important Disclaimer</h3>
+        <p>{{ disclaimer }}</p>
+        
+        {% if compliance_notes %}
+        <h4>Compliance Notes:</h4>
+        <ul>
+            {% for note in compliance_notes %}
+            <li>{{ note }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>{{ branding.footer_text or 'Powered by InsureWiz AI Insurance Comparison Platform' }}</p>
+        <p>Report ID: {{ report_id }} | Generated using AI Model: {{ ai_model }}</p>
+        {% if data_sources %}
+        <p style="font-size: 9pt;">Data sources: {{ data_sources|length }} official insurer websites</p>
+        {% endif %}
+    </div>
+</body>
+</html>
