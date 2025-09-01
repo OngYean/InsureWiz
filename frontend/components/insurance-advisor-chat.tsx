@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Send, Mic, Bot, User, Sparkles } from "lucide-react"
+import { Send, Mic, Bot, User, Sparkles, AlertCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface Message {
   id: string
@@ -18,24 +19,8 @@ interface Message {
   typing?: boolean
 }
 
-const sampleResponses: Record<string, string> = {
-  comprehensive:
-    "Comprehensive coverage protects your vehicle against damage from non-collision events like theft, vandalism, weather damage, or hitting an animal. It's different from collision coverage, which only covers damage from crashes. Think of comprehensive as protection from 'acts of nature' and other unexpected events.",
-
-  collision:
-    "Collision coverage pays for damage to your car when you hit another vehicle or object, or when another vehicle hits you. This includes accidents like rear-ending someone, hitting a tree, or rolling your car. It works regardless of who's at fault in the accident.",
-
-  "how much":
-    "The amount of car insurance you need depends on several factors: your state's minimum requirements, your car's value, your assets to protect, and your risk tolerance. Most experts recommend at least 100/300/100 coverage (100k bodily injury per person, 300k per accident, 100k property damage) plus comprehensive and collision if your car is worth more than $3,000.",
-
-  premium:
-    "Several factors affect your insurance premium: your driving record, age, location, type of car, credit score (in most states), coverage amounts, and deductibles. Young drivers and those with accidents or violations typically pay more. Living in areas with high crime or accident rates also increases costs.",
-
-  claim:
-    "To file a claim: 1) Contact your insurance company immediately (most have 24/7 claim hotlines), 2) Provide your policy number and details about the incident, 3) Take photos if safe to do so, 4) Get a police report if required, 5) Keep records of all communications. Your insurer will assign an adjuster to evaluate the damage and guide you through the process.",
-
-  deductible:
-    "A deductible is the amount you pay out-of-pocket before your insurance coverage kicks in. For example, with a $500 deductible, you pay the first $500 of repair costs, and insurance covers the rest. Higher deductibles mean lower premiums, but more out-of-pocket costs when you file a claim.",
+interface ChatResponse {
+  response: string
 }
 
 export function InsuranceAdvisorChat() {
@@ -50,7 +35,9 @@ export function InsuranceAdvisorChat() {
   ])
   const [inputValue, setInputValue] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -60,35 +47,57 @@ export function InsuranceAdvisorChat() {
     scrollToBottom()
   }, [messages])
 
-  const generateResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase()
+  // Check backend connection on component mount
+  useEffect(() => {
+    checkBackendConnection()
+  }, [])
 
-    // Check for keywords in the message
-    for (const [keyword, response] of Object.entries(sampleResponses)) {
-      if (lowerMessage.includes(keyword)) {
-        return response
+  const checkBackendConnection = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/health')
+      if (response.ok) {
+        setIsConnected(true)
+        toast({
+          title: "Connected to AI Backend",
+          description: "AI Insurance Advisor is ready to help!",
+        })
       }
+    } catch (error) {
+      setIsConnected(false)
+      toast({
+        title: "Backend Connection Failed",
+        description: "Please ensure the backend server is running on port 8000",
+        variant: "destructive",
+      })
     }
+  }
 
-    // Default responses for common patterns
-    if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-      return "Hello! I'm here to help you with any insurance questions you have. Feel free to ask about coverage types, claims, premiums, or anything else insurance-related."
+  const sendMessageToAI = async (message: string): Promise<string> => {
+    try {
+      const response = await fetch('http://localhost:8000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data: ChatResponse = await response.json()
+      return data.response
+    } catch (error) {
+      console.error('Error sending message to AI:', error)
+      throw new Error('Failed to get response from AI. Please check your backend connection.')
     }
-
-    if (lowerMessage.includes("thank")) {
-      return "You're welcome! I'm always here to help with your insurance questions. Is there anything else you'd like to know?"
-    }
-
-    if (lowerMessage.includes("best") && lowerMessage.includes("insurance")) {
-      return "The 'best' insurance depends on your specific needs, budget, and circumstances. I'd recommend comparing coverage options, deductibles, and customer service ratings. Would you like me to explain what to look for when comparing policies?"
-    }
-
-    // Generic helpful response
-    return "That's a great question! While I don't have specific information about that topic in my current knowledge base, I'd recommend contacting your insurance agent or company directly for detailed guidance. Is there anything else about general insurance concepts I can help explain?"
   }
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    if (!inputValue.trim() || !isConnected) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -101,18 +110,35 @@ export function InsuranceAdvisorChat() {
     setInputValue("")
     setIsTyping(true)
 
-    // Simulate AI thinking time
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      const aiResponse = await sendMessageToAI(inputValue)
+      
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: generateResponse(inputValue),
+        content: aiResponse,
         sender: "ai",
         timestamp: new Date(),
       }
 
-      setMessages((prev) => [...prev, aiResponse])
+      setMessages((prev) => [...prev, aiMessage])
+    } catch (error) {
+      // Add error message
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: error instanceof Error ? error.message : 'An error occurred while getting AI response.',
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+      
+      toast({
+        title: "AI Response Error",
+        description: error instanceof Error ? error.message : 'Failed to get AI response',
+        variant: "destructive",
+      })
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -126,6 +152,10 @@ export function InsuranceAdvisorChat() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
+  const retryConnection = () => {
+    checkBackendConnection()
+  }
+
   return (
     <Card className="h-[600px] flex flex-col border-border">
       <CardHeader className="border-b">
@@ -134,11 +164,23 @@ export function InsuranceAdvisorChat() {
             <Bot className="h-6 w-6 text-primary mr-2" />
             AI Insurance Advisor
           </div>
-          <Badge variant="outline" className="text-green-600 border-green-600">
-            <div className="w-2 h-2 bg-green-600 rounded-full mr-1 animate-pulse" />
-            Online
+          <Badge 
+            variant={isConnected ? "outline" : "destructive"} 
+            className={isConnected ? "text-green-600 border-green-600" : "text-red-600 border-red-600"}
+          >
+            <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? "bg-green-600 animate-pulse" : "bg-red-600"}`} />
+            {isConnected ? "Online" : "Offline"}
           </Badge>
         </CardTitle>
+        {!isConnected && (
+          <div className="flex items-center space-x-2 text-sm text-amber-600 bg-amber-50 p-2 rounded-md">
+            <AlertCircle className="h-4 w-4" />
+            <span>Backend not connected. Please ensure the server is running.</span>
+            <Button size="sm" variant="outline" onClick={retryConnection}>
+              Retry
+            </Button>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0">
@@ -203,22 +245,22 @@ export function InsuranceAdvisorChat() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about insurance..."
+                placeholder={isConnected ? "Ask me anything about insurance..." : "Backend not connected..."}
                 className="pr-12"
-                disabled={isTyping}
+                disabled={isTyping || !isConnected}
               />
               <Button
                 size="sm"
                 variant="ghost"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                disabled={isTyping}
+                disabled={isTyping || !isConnected}
               >
                 <Mic className="h-4 w-4 text-muted-foreground" />
               </Button>
             </div>
             <Button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isTyping}
+              disabled={!inputValue.trim() || isTyping || !isConnected}
               size="sm"
               className="h-10 w-10 p-0"
             >
@@ -226,7 +268,10 @@ export function InsuranceAdvisorChat() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            AI responses are for informational purposes only. Consult with licensed agents for specific advice.
+            {isConnected 
+              ? "AI responses are for informational purposes only. Consult with licensed agents for specific advice."
+              : "Please start the backend server to use the AI advisor."
+            }
           </p>
         </div>
       </CardContent>

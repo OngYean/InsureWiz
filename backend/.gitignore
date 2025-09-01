@@ -1,2 +1,4 @@
 # .gitignore for backend files
 # Nah actually created this because git doesn't allow empty folders
+.env
+__pycache__/
