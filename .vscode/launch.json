@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Frontend: next dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "next",
+      "runtimeArgs": ["dev"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Frontend: next build",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "next",
+      "runtimeArgs": ["build"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Frontend: next lint",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "next",
+      "runtimeArgs": ["lint"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Frontend: next start",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "next",
+      "runtimeArgs": ["start"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}
