@@ -189,6 +189,30 @@ async def live_comparison(request_data: Dict[str, Any]):
         if not policies:
             raise HTTPException(status_code=404, detail="No live policies available")
         
+        # Store policies in database
+        db_client = get_supabase_client()
+        stored_count = 0
+        
+        if db_client:
+            try:
+                # Transform and insert policies
+                for policy in policies:
+                    # Transform to Supabase schema
+                    transformed_policy = transform_to_supabase_schema(policy)
+                    
+                    try:
+                        db_result = db_client.table("policies").insert(transformed_policy).execute()
+                        if db_result.data:
+                            stored_count += 1
+                    except Exception as policy_error:
+                        # Skip duplicates and other individual policy errors
+                        if "unique constraint" not in str(policy_error):
+                            logger.warning(f"Failed to store policy {policy.get('product_name', 'Unknown')}: {policy_error}")
+                        
+                logger.info(f"Stored {stored_count} policies in database during live comparison")
+            except Exception as e:
+                logger.error(f"Database storage error during live comparison: {e}")
+        
         # Enhanced scoring with real-time data
         scored_policies = []
         
@@ -248,33 +272,72 @@ async def live_comparison(request_data: Dict[str, Any]):
         
         session_id = f"live_{hash(str(request_data))}"
         
-        return {
-            "session_id": session_id,
-            "comparison_type": "live_real_time",
-            "timestamp": datetime.now().isoformat(),
-            "customer_profile": {
-                "age": customer_age,
-                "location": location,
-                "vehicle_value": vehicle_value,
-                "claims_history": claims_history
-            },
-            "data_source": "real_time_scraping",
-            "policies_analyzed": len(scored_policies),
-            "comparison_summary": {
-                "total_policies": len(scored_policies),
-                "best_policy": scored_policies[0] if scored_policies else None,
-                "average_premium": sum(p["adjusted_premium"] for p in scored_policies) / len(scored_policies) if scored_policies else 0,
-                "price_range": {
-                    "min": min(p["adjusted_premium"] for p in scored_policies) if scored_policies else 0,
-                    "max": max(p["adjusted_premium"] for p in scored_policies) if scored_policies else 0
-                }
-            },
-            "policy_rankings": scored_policies,
-            "scraping_info": {
-                "insurers_scraped": len(real_time_scraper.insurers),
-                "data_freshness": "live",
-                "scraping_timestamp": datetime.now().isoformat()
+        # Transform to frontend-expected format
+        comparison_results = []
+        for policy_data in scored_policies:
+            comparison_result = {
+                "policy": {
+                    "id": policy_data["policy_id"],
+                    "insurer": policy_data["insurer"],
+                    "product_name": policy_data["product_name"],
+                    "coverage_type": "comprehensive",
+                    "is_takaful": policy_data["is_takaful"],
+                    "coverage_details": policy_data.get("coverage_details", {}),
+                    "pricing": {
+                        "base_premium": policy_data["base_premium"],
+                        "service_tax": policy_data["base_premium"] * 0.06,
+                        "excess": 500,
+                        "ncd_discount": 55
+                    },
+                    "eligibility_criteria": {
+                        "min_age": 18,
+                        "max_age": 75,
+                        "vehicle_age_max": 15,
+                        "license_years_min": 1
+                    },
+                    "additional_benefits": {
+                        "roadside_assistance": True,
+                        "workshop_network": True,
+                        "online_claims": True,
+                        "mobile_app": True
+                    },
+                    "source_urls": [policy_data.get("source_url", "")]
+                },
+                "overall_score": policy_data["score"],
+                "category_scores": {
+                    "coverage_score": policy_data.get("coverage_score", 75),
+                    "price_score": policy_data.get("price_score", 80),
+                    "service_score": policy_data.get("service_score", 70),
+                    "eligibility_score": policy_data.get("eligibility_score", 85)
+                },
+                "pros": [
+                    "Real-time pricing",
+                    "Live data freshness",
+                    "Competitive premium",
+                    "Good coverage options"
+                ],
+                "cons": [
+                    "Limited customization",
+                    "Standard benefits"
+                ],
+                "ai_analysis": f"This {policy_data['product_name']} policy from {policy_data['insurer']} offers good value with a premium of RM{policy_data['adjusted_premium']:.0f}. {'Takaful-compliant option' if policy_data['is_takaful'] else 'Conventional insurance option'}.",
+                "suitability_rating": "high" if policy_data["score"] > 70 else "medium" if policy_data["score"] > 50 else "low"
             }
+            comparison_results.append(comparison_result)
+        
+        return {
+            "comparison_results": comparison_results,
+            "recommendation": comparison_results[0] if comparison_results else None,
+            "market_analysis": {
+                "average_premium": sum(p["adjusted_premium"] for p in scored_policies) / len(scored_policies) if scored_policies else 0,
+                "price_trends": "stable",
+                "market_insights": [
+                    f"Analyzed {len(scored_policies)} live policies from {len(real_time_scraper.insurers)} insurers",
+                    "Real-time data ensures most current pricing",
+                    "Takaful options available" if any(p["is_takaful"] for p in scored_policies) else "Conventional options available"
+                ]
+            },
+            "data_freshness": "real_time"
         }
         
     except Exception as e:

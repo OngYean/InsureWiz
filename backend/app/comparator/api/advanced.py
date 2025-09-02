@@ -265,3 +265,273 @@ async def get_feature_status():
             "status": "active"
         }
     }
+
+@router.post("/generate-report")
+async def generate_pdf_report(report_data: Dict[str, Any]):
+    """Generate PDF report from comparison results"""
+    try:
+        logger.info("Generating PDF report from live comparison data...")
+        
+        # Extract data
+        customer_input = report_data.get("customer_input", {})
+        comparison_results = report_data.get("comparison_results", [])
+        recommendation = report_data.get("recommendation", {})
+        
+        if not comparison_results:
+            raise HTTPException(status_code=400, detail="No comparison results provided")
+        
+        # Prepare template data
+        template_data = {
+            "customer_name": "Insurance Seeker",
+            "generated_date": datetime.now().strftime('%Y-%m-%d'),
+            "generated_time": datetime.now().strftime('%H:%M:%S'),
+            "comparison_date": datetime.now().strftime('%Y-%m-%d'),
+            "total_policies": len(comparison_results),
+            "processing_time": "Real-time",
+            "top_recommendation": f"{recommendation.get('policy', {}).get('insurer', 'N/A')} - {recommendation.get('policy', {}).get('product_name', 'N/A')}",
+            "summary": {
+                "takaful_options": sum(1 for r in comparison_results if r.get('policy', {}).get('is_takaful')),
+                "coverage_range": {"Comprehensive": len(comparison_results)}
+            },
+            "recommendations": [],
+            "branding": {
+                "primary_color": "#2563eb",
+                "footer_text": "Powered by InsureWiz AI Insurance Comparison Platform"
+            },
+            "report_id": f"REPORT_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "ai_model": "GPT-4",
+            "disclaimer": "This comparison is based on publicly available information and should not be considered as financial advice. Please verify all details with the respective insurers before making a decision.",
+        }
+        
+        # Convert comparison results to template format
+        for i, result in enumerate(comparison_results[:5]):  # Top 5 only
+            policy = result.get('policy', {})
+            template_data["recommendations"].append({
+                "rank": i + 1,
+                "policy": policy,
+                "score": {"total_score": result.get('overall_score', 0)},
+                "coverage_analysis": result.get('ai_analysis', 'No analysis available'),
+                "strengths": result.get('pros', [])[:4],
+                "weaknesses": result.get('cons', [])[:4],
+                "best_for": ["General drivers", "Urban commuters", "Family vehicles"]
+            })
+        
+        # Try to generate PDF using ReportLab (more reliable on Windows)
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib import colors
+            from reportlab.lib.units import inch
+            import io
+            
+            # Create PDF buffer
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+            
+            # Get styles
+            styles = getSampleStyleSheet()
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                spaceAfter=30,
+                textColor=colors.HexColor('#2563eb'),
+                alignment=1  # Center alignment
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=16,
+                spaceAfter=12,
+                textColor=colors.HexColor('#2563eb')
+            )
+            
+            # Build PDF content
+            story = []
+            
+            # Title
+            story.append(Paragraph("Insurance Comparison Report", title_style))
+            story.append(Spacer(1, 12))
+            
+            # Report info
+            report_info = [
+                ['Generated:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                ['Vehicle Type:', customer_input.get('vehicle_type', 'Not specified')],
+                ['Coverage:', customer_input.get('coverage_preference', 'Not specified')],
+                ['Budget:', f"RM {customer_input.get('price_range_max', 'Not specified')}"],
+                ['Policies Analyzed:', str(len(comparison_results))]
+            ]
+            
+            info_table = Table(report_info, colWidths=[2*inch, 3*inch])
+            info_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.gray),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            
+            story.append(info_table)
+            story.append(Spacer(1, 20))
+            
+            # Recommended Policy
+            story.append(Paragraph("🏆 Recommended Policy", heading_style))
+            
+            rec_policy = recommendation.get('policy', {})
+            rec_data = [
+                ['Insurer:', rec_policy.get('insurer', 'N/A')],
+                ['Product:', rec_policy.get('product_name', 'N/A')],
+                ['Score:', f"{recommendation.get('overall_score', 0):.1f}/100"],
+                ['Premium:', f"RM {rec_policy.get('pricing', {}).get('base_premium', 0)}"],
+                ['Takaful:', 'Yes' if rec_policy.get('is_takaful') else 'No']
+            ]
+            
+            rec_table = Table(rec_data, colWidths=[2*inch, 3*inch])
+            rec_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#e8f5e9')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#10b981')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            
+            story.append(rec_table)
+            story.append(Spacer(1, 20))
+            
+            # Analysis
+            if recommendation.get('ai_analysis'):
+                story.append(Paragraph("Analysis:", styles['Heading4']))
+                story.append(Paragraph(recommendation.get('ai_analysis', ''), styles['Normal']))
+                story.append(Spacer(1, 15))
+            
+            # All Policies Comparison
+            story.append(Paragraph("All Policies Compared", heading_style))
+            
+            # Create comparison table
+            table_data = [['Rank', 'Insurer', 'Product', 'Score', 'Premium', 'Takaful']]
+            
+            for i, result in enumerate(comparison_results[:10]):  # Top 10
+                policy = result.get('policy', {})
+                table_data.append([
+                    str(i + 1),
+                    policy.get('insurer', 'N/A')[:20],  # Truncate long names
+                    policy.get('product_name', 'N/A')[:25],
+                    f"{result.get('overall_score', 0):.1f}",
+                    f"RM {policy.get('pricing', {}).get('base_premium', 0)}",
+                    'Yes' if policy.get('is_takaful') else 'No'
+                ])
+            
+            comparison_table = Table(table_data, colWidths=[0.6*inch, 1.5*inch, 2*inch, 0.8*inch, 1*inch, 0.7*inch])
+            comparison_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2563eb')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                # Highlight top 3
+                ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#dcfce7')),  # Rank 1
+                ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#dbeafe')),  # Rank 2
+                ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#fef3c7')),  # Rank 3
+            ]))
+            
+            story.append(comparison_table)
+            story.append(Spacer(1, 20))
+            
+            # Footer
+            story.append(Paragraph("Disclaimer: This comparison is based on publicly available information and should not be considered as financial advice. Please verify all details with the respective insurers before making a decision.", styles['Italic']))
+            
+            # Build PDF
+            doc.build(story)
+            pdf_bytes = buffer.getvalue()
+            buffer.close()
+            
+            from fastapi.responses import Response
+            
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": "attachment; filename=insurance_comparison_report.pdf"}
+            )
+            
+        except ImportError as e:
+            logger.warning(f"ReportLab not available: {e}. Falling back to HTML report.")
+            # Fallback to simple HTML report
+            simple_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Insurance Comparison Report</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                    .header {{ background: #f0f0f0; padding: 15px; border-radius: 5px; }}
+                    .policy {{ border: 1px solid #ddd; margin: 10px 0; padding: 15px; }}
+                    .score {{ font-weight: bold; color: #007bff; }}
+                    .recommendation {{ background: #e8f5e9; padding: 15px; border-radius: 5px; }}
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>InsureWiz Insurance Comparison Report</h1>
+                    <p>Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    <p>Vehicle Type: {customer_input.get('vehicle_type', 'Not specified')}</p>
+                    <p>Coverage Preference: {customer_input.get('coverage_preference', 'Not specified')}</p>
+                    <p>Budget: RM {customer_input.get('price_range_max', 'Not specified')}</p>
+                </div>
+                
+                <h2>Recommended Policy</h2>
+                <div class="recommendation">
+                    <h3>{recommendation.get('policy', {}).get('insurer', 'N/A')} - {recommendation.get('policy', {}).get('product_name', 'N/A')}</h3>
+                    <p><span class="score">Overall Score: {recommendation.get('overall_score', 0):.1f}/100</span></p>
+                    <p>Premium: RM {recommendation.get('policy', {}).get('pricing', {}).get('base_premium', 0)}</p>
+                    <p>Analysis: {recommendation.get('ai_analysis', 'No analysis available')}</p>
+                </div>
+                
+                <h2>All Policies Compared</h2>
+            """
+            
+            # Add all policies
+            for result in comparison_results:
+                policy = result.get('policy', {})
+                simple_html += f"""
+                <div class="policy">
+                    <h3>{policy.get('insurer', 'N/A')} - {policy.get('product_name', 'N/A')}</h3>
+                    <p><span class="score">Score: {result.get('overall_score', 0):.1f}/100</span></p>
+                    <p>Premium: RM {policy.get('pricing', {}).get('base_premium', 0)}</p>
+                    <p>Takaful: {'Yes' if policy.get('is_takaful') else 'No'}</p>
+                    <p>Analysis: {result.get('ai_analysis', 'No analysis available')}</p>
+                    <div>
+                        <strong>Pros:</strong> {', '.join(result.get('pros', []))}
+                    </div>
+                    <div>
+                        <strong>Cons:</strong> {', '.join(result.get('cons', []))}
+                    </div>
+                </div>
+                """
+            
+            simple_html += """
+            </body>
+            </html>
+            """
+            
+            from fastapi.responses import Response
+            
+            return Response(
+                content=simple_html,
+                media_type="text/html",
+                headers={"Content-Disposition": "attachment; filename=insurance_report.html"}
+            )
+        
+    except Exception as e:
+        logger.error(f"Report generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
