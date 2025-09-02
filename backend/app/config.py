@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     ai_model: str = "gemini-2.0-flash"
     ai_temperature: float = 0.7
     
+    # Pinecone Configuration
+    pinecone_api_key: str = os.getenv("PINECONE_API_KEY", "")
+    pinecone_environment: str = os.getenv("PINECONE_ENVIRONMENT", "gcp-starter")
+    pinecone_index_name: str = os.getenv("PINECONE_INDEX_NAME", "insurewiz")
+    
+    # RAG Configuration
+    chunk_size: int = 1000
+    chunk_overlap: int = 200
+    top_k_results: int = 5
+    
     # Security
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
@@ -38,6 +48,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra fields from environment
 
 # Global settings instance
 settings = Settings()
@@ -45,4 +56,7 @@ settings = Settings()
 # Validate required settings
 if not settings.google_api_key:
     raise ValueError("GOOGLE_API_KEY environment variable is required")
+
+if not settings.pinecone_api_key:
+    raise ValueError("PINECONE_API_KEY environment variable is required")
 

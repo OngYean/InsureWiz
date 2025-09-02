@@ -5,6 +5,7 @@ from app.api import chat, health
 from app.utils.logger import setup_logger
 from app.utils.exceptions import handle_insurewiz_exception, InsureWizException
 from app.middleware.logging import LoggingMiddleware
+from app.core.startup import create_startup_event
 
 # Configure logging
 logger = setup_logger("insurewiz")
@@ -54,6 +55,9 @@ def create_app() -> FastAPI:
     @app.on_event("shutdown")
     async def shutdown_event():
         logger.info("Shutting down InsureWiz AI Chatbot API...")
+    
+    # Initialize RAG and knowledge base services
+    create_startup_event(app)
     
     return app
 
