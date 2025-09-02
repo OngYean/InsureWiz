@@ -43,7 +43,7 @@ class VectorStoreService:
                 logger.info(f"Creating Pinecone index: {self.index_name}")
                 self.pc.create_index(
                     name=self.index_name,
-                    dimension=1024,  # Use 1024 to match existing index
+                    dimension=768,  # Use 768 to match embedding-001 model
                     metric="cosine"
                 )
                 logger.info(f"Pinecone index '{self.index_name}' created successfully")

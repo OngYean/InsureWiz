@@ -12,3 +12,5 @@ langchain-pinecone
 langchain-community
 langchain-text-splitters
 tiktoken
+markdown
+beautifulsoup4

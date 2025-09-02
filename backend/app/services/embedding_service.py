@@ -18,29 +18,27 @@ class EmbeddingService:
         logger.info("Embedding service initialized successfully")
     
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Embed a list of texts - LangChain interface method"""
+        """Embed a list of texts using Google's embedding-001 model"""
         try:
-            # For now, use improved fallback embeddings to match Pinecone index dimensions
-            # TODO: Consider recreating Pinecone index with 768 dimensions for Google embeddings
-            logger.info("Using improved fallback embeddings to match Pinecone index dimensions (1024)")
-            return self._improved_fallback_embeddings(texts)
+            # Use Google's embedding-001 model for 768 dimensions
+            logger.info("Using Google embedding-001 model for 768 dimensions")
+            return self._google_embeddings(texts)
             
         except Exception as e:
-            logger.error(f"Error generating embeddings: {str(e)}")
-            # Fallback to simple embeddings if Google API fails
+            logger.error(f"Error generating Google embeddings: {str(e)}")
+            # Fallback to improved embeddings if Google API fails
             return self._improved_fallback_embeddings(texts)
     
     def embed_query(self, text: str) -> List[float]:
-        """Embed a single query text - LangChain interface method"""
+        """Embed a single query text using Google's embedding-001 model"""
         try:
-            # For now, use improved fallback embeddings to match Pinecone index dimensions
-            # TODO: Consider recreating Pinecone index with 768 dimensions for Google embeddings
-            logger.info("Using improved fallback embeddings to match Pinecone index dimensions (1024)")
-            return self._improved_fallback_embeddings([text])[0]
+            # Use Google's embedding-001 model for 768 dimensions
+            logger.info("Using Google embedding-001 model for 768 dimensions")
+            return self._google_embeddings([text])[0]
             
         except Exception as e:
-            logger.error(f"Error generating query embedding: {str(e)}")
-            # Fallback to simple embedding if Google API fails
+            logger.error(f"Error generating Google query embedding: {str(e)}")
+            # Fallback to improved embedding if Google API fails
             return self._improved_fallback_embeddings([text])[0]
     
     def _improved_fallback_embeddings(self, texts: List[str]) -> List[List[float]]:
@@ -49,16 +47,16 @@ class EmbeddingService:
         
         # Define semantic categories and their associated dimensions
         semantic_categories = {
-            'insurance': list(range(0, 100)),
-            'technology': list(range(100, 200)),
-            'business': list(range(200, 300)),
-            'health': list(range(300, 400)),
-            'motor': list(range(400, 500)),
-            'property': list(range(500, 600)),
-            'life': list(range(600, 700)),
-            'claims': list(range(700, 800)),
-            'malaysia': list(range(800, 900)),
-            'general': list(range(900, 1024))
+            'insurance': list(range(0, 85)),
+            'technology': list(range(85, 170)),
+            'business': list(range(170, 255)),
+            'health': list(range(255, 340)),
+            'motor': list(range(340, 425)),
+            'property': list(range(425, 510)),
+            'life': list(range(510, 595)),
+            'claims': list(range(595, 680)),
+            'malaysia': list(range(680, 730)),
+            'general': list(range(730, 768))
         }
         
         # Define keyword mappings to semantic categories
@@ -77,7 +75,7 @@ class EmbeddingService:
         
         for text in texts:
             text_lower = text.lower()
-            embedding = [0.0] * 1024  # Initialize with zeros
+            embedding = [0.0] * 768  # Initialize with zeros for 768 dimensions
             
             # Process each semantic category
             for category, dimensions in semantic_categories.items():
@@ -111,6 +109,26 @@ class EmbeddingService:
         logger.info("Using improved fallback embeddings with semantic categories")
         return embeddings
     
+    def _google_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Generate embeddings using Google's embedding-001 model"""
+        try:
+            embeddings = []
+            for text in texts:
+                # Use Google's embedding-001 model
+                embedding = genai.embed_content(
+                    model="models/embedding-001",
+                    content=text,
+                    task_type="retrieval_document"
+                )
+                embeddings.append(embedding['embedding'])
+            
+            logger.info(f"Generated {len(embeddings)} embeddings using Google embedding-001 model")
+            return embeddings
+            
+        except Exception as e:
+            logger.error(f"Error generating Google embeddings: {str(e)}")
+            raise e
+    
     def _fallback_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Original fallback embedding method using simple hash-based approach"""
         embeddings = []
@@ -120,8 +138,8 @@ class EmbeddingService:
             seed = int(text_hash[:8], 16)  # Use first 8 characters as seed
             
             random.seed(seed)
-            # Use 1024 dimensions to match existing Pinecone index
-            embedding = [random.uniform(-1, 1) for _ in range(1024)]
+            # Use 768 dimensions to match new Pinecone index
+            embedding = [random.uniform(-1, 1) for _ in range(768)]
             embeddings.append(embedding)
         
         logger.warning("Using simple fallback embeddings due to Google API failure")
