@@ -18,10 +18,28 @@ interface Message {
   sender: "user" | "ai"
   timestamp: Date
   typing?: boolean
+  sources?: Array<{
+    source: string
+    category: string
+    content_preview: string
+    url?: string
+    published_date?: string
+  }>
+  rag_used?: boolean
+  context_docs?: number
 }
 
 interface ChatResponse {
   response: string
+  sources?: Array<{
+    source: string
+    category: string
+    content_preview: string
+    url?: string
+    published_date?: string
+  }>
+  rag_used?: boolean
+  context_docs?: number
 }
 
 // Function to convert markdown to readable text
@@ -117,9 +135,9 @@ export function InsuranceAdvisorChat() {
     }
   }
 
-  const sendMessageToAI = async (message: string): Promise<string> => {
+  const sendMessageToAI = async (message: string): Promise<ChatResponse> => {
     try {
-      const response = await fetch('http://localhost:8000/api/chat', {
+      const response = await fetch('http://localhost:8000/api/chat/intelligent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +152,7 @@ export function InsuranceAdvisorChat() {
       }
 
       const data: ChatResponse = await response.json()
-      return data.response
+      return data
     } catch (error) {
       console.error('Error sending message to AI:', error)
       throw new Error('Failed to get response from AI. Please check your backend connection.')
@@ -160,9 +178,12 @@ export function InsuranceAdvisorChat() {
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: aiResponse,
+        content: aiResponse.response,
         sender: "ai",
         timestamp: new Date(),
+        sources: aiResponse.sources,
+        rag_used: aiResponse.rag_used,
+        context_docs: aiResponse.context_docs,
       }
 
       setMessages((prev) => [...prev, aiMessage])
@@ -349,6 +370,48 @@ export function InsuranceAdvisorChat() {
                   <p className="text-sm leading-relaxed whitespace-pre-wrap overflow-hidden">
                     {message.sender === "ai" ? formatMessageContent(message.content) : message.content}
                   </p>
+                  
+                  {/* Show sources for AI messages */}
+                  {message.sender === "ai" && message.sources && message.sources.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border/30">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-medium text-primary">
+                          {message.sources.some(s => s.category === "Web Search") 
+                            ? "Enhanced with real-time information" 
+                            : "Powered by knowledge base"
+                          }
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {message.sources.slice(0, 3).map((source, idx) => (
+                          <div key={idx} className="text-xs bg-muted/50 rounded-lg p-2">
+                            <div className="font-medium text-muted-foreground">
+                              {source.source}
+                              <span className={cn(
+                                "ml-2 text-xs px-2 py-1 rounded-full",
+                                source.category === "Web Search" 
+                                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                                  : "bg-primary/10 text-primary"
+                              )}>
+                                {source.category}
+                              </span>
+                            </div>
+                            {source.url && (
+                              <a 
+                                href={source.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline text-xs"
+                              >
+                                View source →
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground mt-2 opacity-70">
                   {formatTime(message.timestamp)}

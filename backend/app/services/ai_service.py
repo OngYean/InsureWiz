@@ -8,6 +8,7 @@ from app.services.document_service import document_service
 from app.services.project_document_service import project_document_service
 from app.utils.logger import setup_logger
 from app.utils.exceptions import AIServiceException, VectorStoreException
+from app.services.tavily_service_enhanced import enhanced_tavily_service as tavily_service
 
 logger = setup_logger("ai_service")
 
@@ -388,6 +389,475 @@ Please provide a comprehensive answer based on the knowledge base information ab
         except Exception as e:
             logger.error(f"Error initializing all knowledge bases: {str(e)}")
             return False
+
+    async def generate_enhanced_response(self, user_message: str, use_tavily: bool = True) -> Dict[str, Any]:
+        """
+        Generate enhanced AI response using RAG + Tavily web search
+        
+        Args:
+            user_message: User's question
+            use_tavily: Whether to include Tavily web search (default: True)
+            
+        Returns:
+            Enhanced response with RAG context and web search results
+        """
+        try:
+            # Step 1: Get RAG response for foundational knowledge
+            rag_response = await self.generate_rag_response(user_message)
+            
+            # Step 2: Get Tavily web search results if enabled and available
+            tavily_results = []
+            if use_tavily and tavily_service.is_enabled():
+                try:
+                    # Determine if this is an insurance-related query
+                    if self._is_insurance_query(user_message):
+                        tavily_results = await tavily_service.search_insurance_related(user_message)
+                    else:
+                        tavily_results = await tavily_service.search(user_message)
+                    
+                    logger.info(f"Tavily search returned {len(tavily_results)} results")
+                except Exception as e:
+                    logger.warning(f"Tavily search failed, continuing with RAG only: {str(e)}")
+            
+            # Step 3: Create enhanced prompt combining both sources
+            enhanced_prompt = self._create_enhanced_prompt(
+                user_message, 
+                rag_response, 
+                tavily_results
+            )
+            
+            # Step 4: Generate final response with enhanced context
+            messages = [
+                SystemMessage(content=enhanced_prompt),
+                HumanMessage(content=user_message)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            # Step 5: Format comprehensive response
+            enhanced_response = {
+                "response": response.content,
+                "rag_used": True,
+                "tavily_used": len(tavily_results) > 0,
+                "knowledge_type": rag_response.get("knowledge_type", "none"),
+                "context_docs": rag_response.get("context_docs", 0),
+                "web_sources": self._format_web_sources(tavily_results),
+                "rag_sources": rag_response.get("sources", []),
+                "total_sources": len(rag_response.get("sources", [])) + len(tavily_results)
+            }
+            
+            logger.info(f"Enhanced response generated successfully with RAG + Tavily")
+            return enhanced_response
+            
+        except Exception as e:
+            logger.error(f"Error generating enhanced response: {str(e)}")
+            # Fallback to basic RAG response
+            try:
+                return await self.generate_rag_response(user_message)
+            except Exception as fallback_error:
+                raise AIServiceException(
+                    message="Failed to generate enhanced response and fallback",
+                    details={"error": str(e), "fallback_error": str(fallback_error), "user_message": user_message[:100]}
+                )
+    
+    def _is_insurance_query(self, user_message: str) -> bool:
+        """Determine if a query is insurance-related for Tavily search optimization"""
+        insurance_keywords = [
+            "insurance", "takaful", "policy", "coverage", "claim", "premium",
+            "motor", "auto", "car", "home", "property", "health", "medical",
+            "life", "family", "business", "liability", "risk", "malaysia",
+            "malaysian", "ncd", "jpj", "pdrm", "bank negara", "flood",
+            "rate", "price", "cost", "market", "trend", "regulation"
+        ]
+        
+        user_message_lower = user_message.lower()
+        return any(keyword in user_message_lower for keyword in insurance_keywords)
+    
+    def _create_enhanced_prompt(self, user_message: str, rag_response: Dict[str, Any], 
+                               tavily_results: List[Dict[str, Any]]) -> str:
+        """Create enhanced prompt combining RAG and Tavily results"""
+        
+        # Base prompt from RAG
+        base_prompt = self.insurance_system_prompt
+        
+        # Add RAG context
+        rag_context = ""
+        if rag_response.get("rag_used"):
+            rag_context = f"\n\nKnowledge Base Information:\n{self._format_rag_context(rag_response)}"
+        
+        # Add Tavily web search results
+        web_context = ""
+        if tavily_results:
+            web_context = f"\n\nCurrent Web Information:\n{self._format_tavily_context(tavily_results)}"
+        
+        # Combine everything
+        enhanced_prompt = f"""{base_prompt}
+
+{rag_context}
+
+{web_context}
+
+User Question: {user_message}
+
+Please provide a comprehensive answer that:
+1. Uses the knowledge base information for foundational knowledge
+2. Incorporates current web information for up-to-date details
+3. Clearly distinguishes between historical knowledge and current information
+4. Provides practical, actionable guidance
+5. Always includes the disclaimer about consulting professionals
+
+If there are conflicting information sources, prioritize the most recent and authoritative sources."""
+        
+        return enhanced_prompt
+    
+    def _format_rag_context(self, rag_response: Dict[str, Any]) -> str:
+        """Format RAG response context for enhanced prompt"""
+        if not rag_response.get("rag_used"):
+            return "No knowledge base information available."
+        
+        sources = rag_response.get("sources", [])
+        if not sources:
+            return "Knowledge base accessed but no specific sources found."
+        
+        context_parts = []
+        for source in sources:
+            context_parts.append(f"• {source.get('source', 'Unknown')} - {source.get('category', 'General')}")
+        
+        return f"Knowledge Base Sources:\n" + "\n".join(context_parts)
+    
+    def _format_tavily_context(self, tavily_results: List[Dict[str, Any]]) -> str:
+        """Format Tavily results for enhanced prompt"""
+        if not tavily_results:
+            return ""
+        
+        context_parts = []
+        for i, result in enumerate(tavily_results[:3], 1):  # Limit to top 3 results
+            title = result.get('title', 'No Title')
+            content = result.get('content', '')[:300]  # Limit content length
+            source = result.get('source', 'Unknown')
+            date = result.get('published_date', '')
+            
+            date_info = f" ({date})" if date else ""
+            context_parts.append(f"{i}. {title} - {source}{date_info}\n   {content}...")
+        
+        return "Current Web Sources:\n" + "\n".join(context_parts)
+    
+    def _classify_query_intent(self, user_message: str) -> str:
+        """
+        Classify user query intent to determine response strategy
+        
+        Args:
+            user_message: User's question
+            
+        Returns:
+            Query intent classification
+        """
+        try:
+            # Create classification prompt
+            classification_prompt = f"""
+            Analyze the following user question and classify it into one of these categories:
+            
+            1. "project_info" - Questions about the InsureWiz project, its features, capabilities, or how to use it
+            2. "insurance_current" - Questions requiring current, up-to-date insurance information, rates, or recent changes
+            3. "insurance_general" - General insurance knowledge questions that don't require current information
+            4. "mixed" - Questions that combine project information with current insurance knowledge needs
+            5. "general" - General questions not related to insurance or the InsureWiz project (e.g., math, science, history, etc.)
+            
+            User Question: {user_message}
+            
+            Respond with ONLY the category name (e.g., "project_info", "insurance_current", etc.)
+            """
+            
+            messages = [
+                SystemMessage(content=classification_prompt),
+                HumanMessage(content=user_message)
+            ]
+            
+            response = self.llm.invoke(messages)
+            intent = response.content.strip().lower()
+            
+            # Validate and normalize intent
+            valid_intents = ["project_info", "insurance_current", "insurance_general", "mixed", "general"]
+            if intent in valid_intents:
+                return intent
+            else:
+                # Default to general insurance if classification is unclear
+                logger.warning(f"Unclear query intent classification: {intent}, defaulting to insurance_general")
+                return "insurance_general"
+                
+        except Exception as e:
+            logger.error(f"Error classifying query intent: {str(e)}")
+            # Default to general insurance on error
+            return "insurance_general"
+    
+    def _format_web_sources(self, tavily_results: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        """Format Tavily results for response metadata"""
+        web_sources = []
+        for result in tavily_results:
+            web_sources.append({
+                "title": result.get('title', 'No Title'),
+                "url": result.get('url', ''),
+                "source": result.get('source', 'Unknown'),
+                "published_date": result.get('published_date', ''),
+                "content_preview": result.get('content', '')[:200] + "..." if len(result.get('content', '')) > 200 else result.get('content', '')
+            })
+        return web_sources
+    
+    async def generate_intelligent_response(self, user_message: str) -> Dict[str, Any]:
+        """
+        Generate AI response using intelligent routing based on query intent
+        
+        Args:
+            user_message: User's question
+            
+        Returns:
+            Intelligent response with appropriate knowledge sources
+        """
+        try:
+            # Step 1: Classify the query intent
+            query_intent = self._classify_query_intent(user_message)
+            logger.info(f"Query classified as: {query_intent}")
+            
+            # Step 2: Route to appropriate response strategy
+            if query_intent == "project_info":
+                # For project-related questions, use RAG only (no web search)
+                logger.info("Using RAG-only strategy for project information query")
+                return await self._generate_project_focused_response(user_message)
+                
+            elif query_intent == "insurance_current":
+                # For current information needs, use RAG + Tavily
+                logger.info("Using RAG + Tavily strategy for current insurance information")
+                return await self._generate_current_insurance_response(user_message)
+                
+            elif query_intent == "insurance_general":
+                # For general knowledge, use RAG + optional Tavily
+                logger.info("Using RAG + optional Tavily strategy for general insurance knowledge")
+                return await self._generate_general_insurance_response(user_message)
+                
+            elif query_intent == "mixed":
+                # For mixed queries, use RAG + limited Tavily
+                logger.info("Using mixed strategy for project + current information query")
+                return await self._generate_mixed_response(user_message)
+                
+            elif query_intent == "general":
+                # For general questions, use Gemini directly (no RAG or web search)
+                logger.info("Using Gemini direct strategy for general questions")
+                return await self._generate_general_question_response(user_message)
+                
+            else:
+                # Fallback to general strategy
+                logger.info("Using fallback strategy")
+                return await self._generate_general_insurance_response(user_message)
+                
+        except Exception as e:
+            logger.error(f"Error generating intelligent response: {str(e)}")
+            # Fallback to basic RAG response
+            try:
+                return await self.generate_rag_response(user_message)
+            except Exception as fallback_error:
+                raise AIServiceException(
+                    message="Failed to generate intelligent response and fallback",
+                    details={"error": str(e), "fallback_error": str(fallback_error), "user_message": user_message[:100]}
+                )
+    
+    async def _generate_project_focused_response(self, user_message: str) -> Dict[str, Any]:
+        """Generate response focused on project information using RAG only"""
+        try:
+            # Use RAG with project knowledge base
+            rag_response = await self.generate_rag_response(user_message)
+            
+            # Create enhanced project-focused prompt
+            enhanced_prompt = self._create_project_focused_prompt(user_message, rag_response)
+            
+            # Generate final response
+            messages = [
+                SystemMessage(content=enhanced_prompt),
+                HumanMessage(content=user_message)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            return {
+                "response": response.content,
+                "rag_used": True,
+                "tavily_used": False,
+                "knowledge_type": rag_response.get("knowledge_type", "project"),
+                "context_docs": rag_response.get("context_docs", 0),
+                "web_sources": [],
+                "rag_sources": rag_response.get("sources", []),
+                "total_sources": len(rag_response.get("sources", [])),
+                "strategy": "project_focused_rag_only"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating project-focused response: {str(e)}")
+            raise
+    
+    async def _generate_current_insurance_response(self, user_message: str) -> Dict[str, Any]:
+        """Generate response for current insurance information using RAG + Tavily"""
+        try:
+            # Use the existing enhanced response method
+            return await self.generate_enhanced_response(user_message, use_tavily=True)
+            
+        except Exception as e:
+            logger.error(f"Error generating current insurance response: {str(e)}")
+            raise
+    
+    async def _generate_general_insurance_response(self, user_message: str) -> Dict[str, Any]:
+        """Generate response for general insurance knowledge using RAG + optional Tavily"""
+        try:
+            # Use RAG first
+            rag_response = await self.generate_rag_response(user_message)
+            
+            # Only use Tavily if RAG doesn't provide sufficient information
+            if rag_response.get("context_docs", 0) < 2:  # Threshold for sufficient context
+                logger.info("RAG provided limited context, adding Tavily search")
+                return await self.generate_enhanced_response(user_message, use_tavily=True)
+            else:
+                logger.info("RAG provided sufficient context, using RAG only")
+                return {
+                    "response": rag_response["response"],
+                    "rag_used": True,
+                    "tavily_used": False,
+                    "knowledge_type": rag_response.get("knowledge_type", "insurance"),
+                    "context_docs": rag_response.get("context_docs", 0),
+                    "web_sources": [],
+                    "rag_sources": rag_response.get("sources", []),
+                    "total_sources": len(rag_response.get("sources", [])),
+                    "strategy": "general_insurance_rag_priority"
+                }
+                
+        except Exception as e:
+            logger.error(f"Error generating general insurance response: {str(e)}")
+            raise
+    
+    async def _generate_mixed_response(self, user_message: str) -> Dict[str, Any]:
+        """Generate response for mixed project + current information queries"""
+        try:
+            # Use RAG first for project information
+            rag_response = await self.generate_rag_response(user_message)
+            
+            # Use limited Tavily for current information
+            tavily_results = []
+            if tavily_service.is_enabled():
+                try:
+                    # Limit Tavily search to 2 results for mixed queries
+                    tavily_results = await tavily_service.search(user_message, max_results=2)
+                    logger.info(f"Limited Tavily search returned {len(tavily_results)} results for mixed query")
+                except Exception as e:
+                    logger.warning(f"Tavily search failed for mixed query: {str(e)}")
+            
+            # Create enhanced prompt for mixed query
+            enhanced_prompt = self._create_mixed_query_prompt(user_message, rag_response, tavily_results)
+            
+            # Generate final response
+            messages = [
+                SystemMessage(content=enhanced_prompt),
+                HumanMessage(content=user_message)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            return {
+                "response": response.content,
+                "rag_used": True,
+                "tavily_used": len(tavily_results) > 0,
+                "knowledge_type": rag_response.get("knowledge_type", "mixed"),
+                "context_docs": rag_response.get("context_docs", 0),
+                "web_sources": self._format_web_sources(tavily_results),
+                "rag_sources": rag_response.get("sources", []),
+                "total_sources": len(rag_response.get("sources", [])) + len(tavily_results),
+                "strategy": "mixed_project_current"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating mixed response: {str(e)}")
+            raise
+    
+    def _create_project_focused_prompt(self, user_message: str, rag_response: Dict[str, Any]) -> str:
+        """Create enhanced prompt specifically for project information queries"""
+        context = self._format_context(rag_response.get("sources", []))
+        
+        return f"""You are an AI assistant specialized in helping users understand the InsureWiz project. You have access to the project's documentation and can provide detailed information about the project structure, architecture, setup, and development.
+
+IMPORTANT: Focus ONLY on information about the InsureWiz project itself. Do not search the web for external information unless specifically asked about external integrations or dependencies.
+
+Project Context from Knowledge Base:
+{context}
+
+User Question: {user_message}
+
+Please provide a comprehensive answer based on the project documentation above. Focus on:
+1. Explaining the project structure and components
+2. Describing how different parts work together
+3. Providing setup and development guidance
+4. Explaining the technical architecture and design decisions
+5. Offering practical advice for development and deployment
+6. Describing the features and capabilities of InsureWiz
+
+If the documentation doesn't contain specific information about the user's question, use your general knowledge about software development and insurance systems, but clearly indicate when you're providing information from your training data versus the project documentation.
+
+Always be helpful, clear, and provide actionable information when possible."""
+    
+    def _create_mixed_query_prompt(self, user_message: str, rag_response: Dict[str, Any], 
+                                 tavily_results: List[Dict[str, Any]]) -> str:
+        """Create enhanced prompt for mixed project + current information queries"""
+        project_context = self._format_context(rag_response.get("sources", []))
+        web_context = self._format_tavily_context(tavily_results)
+        
+        return f"""You are an AI assistant helping users understand both the InsureWiz project and current insurance information. You have access to project documentation and current web information.
+
+Project Context from Knowledge Base:
+{project_context}
+
+Current Web Information:
+{web_context}
+
+User Question: {user_message}
+
+Please provide a comprehensive answer that:
+1. Uses the project documentation for InsureWiz-specific information
+2. Incorporates current web information for up-to-date details
+3. Clearly distinguishes between project features and current market information
+4. Provides practical, actionable guidance
+5. Balances technical project details with current insurance context
+
+If there are conflicting information sources, prioritize the project documentation for project details and the most recent web sources for current information."""
+    
+    async def _generate_general_question_response(self, user_message: str) -> Dict[str, Any]:
+        """Generate response for general questions using Gemini directly (no RAG or web search)"""
+        try:
+            # Create a general prompt for non-insurance, non-project questions
+            general_prompt = f"""You are a helpful AI assistant. The user has asked a general question that is not specifically about insurance or the InsureWiz project.
+
+User Question: {user_message}
+
+Please provide a helpful, accurate, and informative answer to this general question. Use your knowledge and reasoning abilities to give the best possible response.
+
+If the question is inappropriate or you cannot provide a helpful answer, please politely explain why."""
+            
+            messages = [
+                SystemMessage(content=general_prompt),
+                HumanMessage(content=user_message)
+            ]
+            
+            response = self.llm.invoke(messages)
+            
+            return {
+                "response": response.content,
+                "rag_used": False,
+                "tavily_used": False,
+                "knowledge_type": "general",
+                "context_docs": 0,
+                "web_sources": [],
+                "rag_sources": [],
+                "total_sources": 0,
+                "strategy": "general_gemini_direct"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating general question response: {str(e)}")
+            raise
 
 # Global AI service instance
 ai_service = AIService()

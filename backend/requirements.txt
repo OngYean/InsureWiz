@@ -14,3 +14,4 @@ langchain-text-splitters
 tiktoken
 markdown
 beautifulsoup4
+tavily-python

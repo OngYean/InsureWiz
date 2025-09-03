@@ -20,10 +20,15 @@ async def initialize_services(app: FastAPI):
             logger.warning("⚠️ Knowledge base initialization failed, continuing without RAG")
         
         # Check RAG system status
-        if ai_service.rag_chain:
-            logger.info("✅ RAG system initialized successfully")
-        else:
-            logger.warning("⚠️ RAG system not available, using basic AI responses")
+        try:
+            # Test RAG functionality by checking if we can generate a basic response
+            test_response = await ai_service.generate_rag_response("test")
+            if test_response:
+                logger.info("✅ RAG system initialized successfully")
+            else:
+                logger.warning("⚠️ RAG system not available, using basic AI responses")
+        except Exception as e:
+            logger.warning(f"⚠️ RAG system check failed: {str(e)}, using basic AI responses")
         
         logger.info("Service initialization completed")
         

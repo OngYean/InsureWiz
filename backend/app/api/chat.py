@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.models.chat import ChatRequest, ChatResponse, RAGChatRequest, RAGChatResponse
 from app.services.ai_service import ai_service
 from app.services.document_service import document_service
+from app.services.tavily_service import tavily_service
 from app.utils.logger import setup_logger
 from typing import Dict, Any
 
@@ -85,6 +86,151 @@ async def chat_with_rag(request: RAGChatRequest):
         raise HTTPException(
             status_code=500, 
             detail=f"Error processing RAG chat request: {str(e)}"
+        )
+
+@router.post("/intelligent", response_model=RAGChatResponse)
+async def chat_with_intelligent_routing(request: RAGChatRequest):
+    """
+    Generate AI response using intelligent routing based on query intent
+    
+    Args:
+        request: Intelligent chat request containing user message and optional session ID
+        
+    Returns:
+        RAGChatResponse: AI-generated response with intelligent source selection
+        
+    Raises:
+        HTTPException: If there's an error processing the request
+    """
+    try:
+        logger.info(f"Processing intelligent chat request: {request.message[:50]}...")
+        
+        # Generate intelligent response with automatic routing
+        intelligent_response = await ai_service.generate_intelligent_response(request.message)
+        
+        # Combine sources from both RAG and web search if available
+        all_sources = intelligent_response.get("rag_sources", [])
+        web_sources = intelligent_response.get("web_sources", [])
+        
+        # Add web sources to the sources list
+        for web_source in web_sources:
+            all_sources.append({
+                "source": web_source.get("title", "Web Source"),
+                "category": "Web Search",
+                "content_preview": web_source.get("content_preview", ""),
+                "url": web_source.get("url", ""),
+                "published_date": web_source.get("published_date", "")
+            })
+        
+        # Create intelligent response
+        response = RAGChatResponse(
+            response=intelligent_response["response"],
+            session_id=request.session_id,
+            sources=all_sources,
+            rag_used=intelligent_response.get("rag_used", False),
+            context_docs=intelligent_response.get("context_docs", 0)
+        )
+        
+        logger.info(f"Intelligent chat request processed successfully with strategy: {intelligent_response.get('strategy', 'unknown')}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error processing intelligent chat request: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing intelligent chat request: {str(e)}"
+        )
+
+@router.post("/enhanced", response_model=RAGChatResponse)
+async def chat_with_enhanced_rag(request: RAGChatRequest):
+    """
+    Generate AI response using enhanced RAG + Tavily web search (legacy endpoint)
+    
+    Note: This endpoint is maintained for backward compatibility. 
+    For new implementations, consider using /intelligent endpoint.
+    
+    Args:
+        request: Enhanced chat request containing user message and optional session ID
+        
+    Returns:
+        RAGChatResponse: AI-generated response with sources from both RAG and web search
+        
+    Raises:
+        HTTPException: If there's an error processing the request
+    """
+    try:
+        logger.info(f"Processing enhanced chat request: {request.message[:50]}...")
+        
+        # Check if Tavily is available
+        if not tavily_service.is_enabled():
+            logger.warning("Tavily service not available, falling back to RAG only")
+            # Fallback to regular RAG
+            return await chat_with_rag(request)
+        
+        # Generate enhanced response with RAG + Tavily
+        enhanced_response = await ai_service.generate_enhanced_response(
+            request.message,
+            use_tavily=True
+        )
+        
+        # Combine sources from both RAG and web search
+        all_sources = enhanced_response.get("rag_sources", [])
+        web_sources = enhanced_response.get("web_sources", [])
+        
+        # Add web sources to the sources list
+        for web_source in web_sources:
+            all_sources.append({
+                "source": web_source.get("title", "Web Source"),
+                "category": "Web Search",
+                "content_preview": web_source.get("content_preview", ""),
+                "url": web_source.get("url", ""),
+                "published_date": web_source.get("published_date", "")
+            })
+        
+        # Create enhanced response
+        response = RAGChatResponse(
+            response=enhanced_response["response"],
+            session_id=request.session_id,
+            sources=all_sources,
+            rag_used=enhanced_response.get("rag_used", False),
+            context_docs=enhanced_response.get("context_docs", 0)
+        )
+        
+        logger.info("Enhanced chat request processed successfully")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error processing enhanced chat request: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing enhanced chat request: {str(e)}"
+        )
+
+@router.get("/tavily-health")
+async def check_tavily_health():
+    """
+    Check the health status of the Tavily service
+    
+    Returns:
+        Dict: Health status of Tavily service
+        
+    Raises:
+        HTTPException: If there's an error checking the service
+    """
+    try:
+        health_status = await tavily_service.health_check()
+        return {
+            "service": "tavily",
+            "status": health_status.get("status", "unknown"),
+            "message": health_status.get("message", "No message available"),
+            "enabled": tavily_service.is_enabled()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error checking Tavily health: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error checking Tavily service health: {str(e)}"
         )
 
 @router.post("/initialize-knowledge")
