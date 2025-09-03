@@ -16,7 +16,10 @@ import {
   Fuel,
   Users,
   AlertCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Search,
+  Brain,
+  Shield
 } from "lucide-react"
 
 interface VehicleInfo {
@@ -58,6 +61,30 @@ interface VehicleInfo {
     pricing_impact: string
     coverage_validity: string
     fraud_indicators: string[]
+  }
+  pydantic_data?: {
+    validation_status: string
+    confidence_score: number
+    color_validation?: {
+      color_found_locally: boolean
+      color_available_for_model: boolean
+      alternative_colors: string[]
+      color_verification_source: string
+      insurance_color_category: string
+    }
+    vehicle_info?: {
+      brand: string
+      model: string
+      year: string
+      market_availability: string
+      assembly_type: string
+      insurance_category: string
+      common_insurance_model: boolean
+    }
+    search_performed: boolean
+    image_urls: string[]
+    validation_notes: string
+    recommendations: string[]
   }
 }
 
@@ -237,6 +264,177 @@ export default function VehicleInfoDisplay({ vehicleInfo, isLoading }: VehicleIn
                 {vehicleInfo.vehicle_info.brand} {vehicleInfo.vehicle_info.model} ({vehicleInfo.vehicle_info.year})
               </p>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* AI Agent Validation Analysis - MOVED BELOW IMAGES */}
+      {vehicleInfo.pydantic_data && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-purple-600" />
+              AI Agent Validation Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Validation Status from Agent */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Agent Status</span>
+                </div>
+                <Badge 
+                  variant={
+                    vehicleInfo.pydantic_data.validation_status === 'valid' ? 'default' :
+                    vehicleInfo.pydantic_data.validation_status === 'warning' ? 'secondary' :
+                    vehicleInfo.pydantic_data.validation_status === 'invalid' ? 'destructive' :
+                    'outline'
+                  }
+                  className="text-xs"
+                >
+                  {vehicleInfo.pydantic_data.validation_status?.toUpperCase() || 'UNKNOWN'}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">External Search</span>
+                </div>
+                <Badge 
+                  variant={vehicleInfo.pydantic_data.search_performed ? 'default' : 'outline'}
+                  className="text-xs"
+                >
+                  {vehicleInfo.pydantic_data.search_performed ? 'PERFORMED' : 'NOT PERFORMED'}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Agent Analysis Notes */}
+            {vehicleInfo.pydantic_data.validation_notes && (
+              <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+                <Brain className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800 dark:text-blue-300">
+                  <strong>AI Analysis:</strong> {vehicleInfo.pydantic_data.validation_notes}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Color Validation Details */}
+            {vehicleInfo.pydantic_data.color_validation && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Color Validation Details</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Found Locally:</span>
+                    {vehicleInfo.pydantic_data.color_validation.color_found_locally ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span>Available for Model:</span>
+                    {vehicleInfo.pydantic_data.color_validation.color_available_for_model ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span>Verification Source:</span>
+                    <Badge variant="outline" className="text-xs">
+                      {vehicleInfo.pydantic_data.color_validation.color_verification_source}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span>Insurance Category:</span>
+                    <Badge 
+                      variant={
+                        vehicleInfo.pydantic_data.color_validation.insurance_color_category === 'premium' ? 'default' :
+                        vehicleInfo.pydantic_data.color_validation.insurance_color_category === 'rare' ? 'destructive' :
+                        'outline'
+                      }
+                      className="text-xs"
+                    >
+                      {vehicleInfo.pydantic_data.color_validation.insurance_color_category?.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Alternative Colors */}
+                {vehicleInfo.pydantic_data.color_validation.alternative_colors && 
+                 vehicleInfo.pydantic_data.color_validation.alternative_colors.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium">Alternative Colors:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {vehicleInfo.pydantic_data.color_validation.alternative_colors.map((color, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {color}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Vehicle Market Information */}
+            {vehicleInfo.pydantic_data.vehicle_info && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Market Information</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Market Availability:</span>
+                    <Badge 
+                      variant={
+                        vehicleInfo.pydantic_data.vehicle_info.market_availability === 'available' ? 'default' :
+                        vehicleInfo.pydantic_data.vehicle_info.market_availability === 'unavailable' ? 'destructive' :
+                        'outline'
+                      }
+                      className="text-xs"
+                    >
+                      {vehicleInfo.pydantic_data.vehicle_info.market_availability?.toUpperCase()}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span>Assembly Type:</span>
+                    <Badge variant="outline" className="text-xs">
+                      {vehicleInfo.pydantic_data.vehicle_info.assembly_type?.toUpperCase()}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span>Insurance Category:</span>
+                    <Badge 
+                      variant={
+                        vehicleInfo.pydantic_data.vehicle_info.insurance_category === 'luxury' ? 'default' :
+                        vehicleInfo.pydantic_data.vehicle_info.insurance_category === 'sports' ? 'destructive' :
+                        'outline'
+                      }
+                      className="text-xs"
+                    >
+                      {vehicleInfo.pydantic_data.vehicle_info.insurance_category?.toUpperCase()}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span>Common Model:</span>
+                    {vehicleInfo.pydantic_data.vehicle_info.common_insurance_model ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -692,10 +692,10 @@ export default function EnhancedVehicleValidatorForm({ onVehicleInfoChange }: En
             disabled={!formData.model || isLoadingYearData}
           />
 
-          {/* Validation Results */}
+          {/* Real-time Field Validation */}
           {validationResults.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-sm">Validation Results</h4>
+              <h4 className="font-medium text-sm">Real-time Field Validation</h4>
               {validationResults.map((result, index) => (
                 <Alert key={index} className={result.isValid ? "border-green-500/50 bg-green-50 dark:bg-green-950/10" : "border-destructive/50 bg-destructive/5"}>
                   <div className="flex items-center gap-2">
