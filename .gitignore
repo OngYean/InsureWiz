@@ -37,3 +37,9 @@ yarn-error.log*
 next-env.d.ts
 
 /.venv
+
+# Machine Learning
+/backend/data/*.csv
+__pycache__/
+*.pyc
+.ipynb_checkpoints

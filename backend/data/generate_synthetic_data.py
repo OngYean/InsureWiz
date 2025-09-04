@@ -72,12 +72,14 @@ def generate_synthetic_data():
     # Add some noise to make it more realistic
     score += np.random.normal(0, 5, num_rows)
 
-    # Determine success based on a score threshold
-    threshold = np.percentile(score, 25) # Approve ~75% of claims
-    claim_success = (score > threshold).astype(int)
-
-    synthetic_df['claim_success'] = claim_success
+    # Scale the score to a 0-100 range to represent success rate
+    score_min = score.min()
+    score_max = score.max()
+    # Scale to a realistic 10-95 range, then clip
+    success_rate = 10 + 85 * (score - score_min) / (score_max - score_min)
     
+    synthetic_df['success_rate'] = success_rate.clip(5, 95)
+
     print("Combining datasets...")
     # 4. Combine the datasets
     final_df = pd.concat([
@@ -91,7 +93,7 @@ def generate_synthetic_data():
 
     # Reorder columns for clarity
     final_df = final_df[[
-        'image_id', 'image_label', 'claim_success', 'incidentType', 'timeOfDay',
+        'image_id', 'image_label', 'success_rate', 'incidentType', 'timeOfDay',
         'roadConditions', 'weatherConditions', 'injuries', 'vehicleDamage',
         'thirdPartyVehicle', 'witnesses', 'policeReport', 'policeReportFiledWithin24h',
         'trafficViolation', 'previousClaims', 'description'
@@ -105,8 +107,8 @@ def generate_synthetic_data():
     print(f"Successfully generated synthetic data and saved to {output_path}")
     print("\n--- Data Sample ---")
     print(final_df.head())
-    print("\n--- Claim Success Distribution ---")
-    print(final_df['claim_success'].value_counts(normalize=True))
+    print("\n--- Success Rate Distribution ---")
+    print(final_df['success_rate'].describe())
 
 
 if __name__ == '__main__':
