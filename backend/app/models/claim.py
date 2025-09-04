@@ -17,3 +17,4 @@ class ClaimPredictionResponse(BaseModel):
     prediction: int = Field(..., description="Predicted success rate of the claim (0-100)")
     confidence: float = Field(..., description="Confidence level of the prediction (0.0-1.0)")
     key_factors: List[str] = Field(..., description="Key factors influencing the prediction")
+    ai_insights: Optional[str] = Field(None, description="AI-generated insights based on the policy document and incident description")

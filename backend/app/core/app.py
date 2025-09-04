@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health.router)
     app.include_router(chat.router)
-    app.include_router(claim.router)
+    app.include_router(claim.router, prefix="/advanced", tags=["Advanced Claims"])
     app.include_router(comparator_router)
     
     # Add exception handler for custom exceptions

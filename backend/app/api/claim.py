@@ -1,12 +1,36 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from typing import List
-from app.models.claim import ClaimPredictionRequest, ClaimPredictionResponse
-import json
+"""
+Advanced Claim Prediction API endpoints with ML analysis
+"""
 
-router = APIRouter()
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from typing import List
+from app.models.claim import ClaimPredictionResponse
+from app.ml.predict import run_prediction
+import json
+import io
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/advanced", tags=["advanced"])
+
+@router.get("/health")
+async def claim_health():
+    """Health check for claim prediction features"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "features": {
+            "ml_prediction": "ready",
+            "cv_analysis": "ready", 
+            "llm_insights": "ready",
+            "pdf_processing": "ready"
+        }
+    }
 
 @router.post(
-    "/advanced/claim",
+    "/claim",
     response_model=ClaimPredictionResponse,
     summary="Predict motor insurance claim success",
     description="""
@@ -28,26 +52,43 @@ async def predict_claim_success(
     - **evidence_files**: Supporting evidence files.
     - **form_data_json**: A JSON string containing the form data.
     """
-    form_data = json.loads(form_data_json)
-    # Here you would process the uploaded files and form data,
-    # and then use your machine learning model to make a prediction.
-    # For now, we'll return a mock response.
+    try:
+        logger.info("Starting claim prediction analysis")
+        
+        form_data = json.loads(form_data_json)
+        
+        # Read evidence files into memory
+        evidence_files_bytes = [await file.read() for file in evidence_files]
+        
+        # Read policy document into an in-memory stream
+        policy_document_stream = await policy_document.read()
+        policy_document_io = io.BytesIO(policy_document_stream)
 
-    # Mock logic to generate a prediction
-    prediction = 75
-    confidence = 0.85
-    key_factors = ["Police report filed", "Clear description of incident", "Evidence provided"]
+        # Get prediction from the ML models
+        result = run_prediction(form_data, evidence_files_bytes, policy_document_io)
 
-    if form_data.get("vehicleDamage") == "total-loss":
-        prediction -= 20
-        key_factors.append("Vehicle is a total loss")
+        if "error" in result:
+            logger.error(f"Prediction error: {result['error']}")
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "message": "Prediction service error",
+                    "error": result["error"]
+                }
+            )
 
-    if form_data.get("injuries") == "yes":
-        prediction -= 10
-        key_factors.append("Injuries reported")
-
-    return ClaimPredictionResponse(
-        prediction=prediction,
-        confidence=confidence,
-        key_factors=key_factors
-    )
+        logger.info(f"Prediction completed successfully: {result.get('prediction', 0)}%")
+        return ClaimPredictionResponse(**result)
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in form_data_json: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid JSON format in form data"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in claim prediction: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during claim prediction"
+        )
