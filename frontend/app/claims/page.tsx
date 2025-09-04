@@ -1,7 +1,15 @@
-import { Navigation } from "@/components/navigation"
-import { FraudClaimChecker } from "@/components/fraud-claim-checker"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle, Shield, Eye, TrendingDown } from "lucide-react"
+import { Navigation } from "@/components/navigation";
+import { ClaimSuccessPredictorForm } from "@/components/claim-success-predictor-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Target,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Brain,
+  BarChart3,
+} from "lucide-react";
 
 export default function ClaimsPage() {
   return (
@@ -12,96 +20,128 @@ export default function ClaimsPage() {
         {/* Header Section */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <AlertTriangle className="h-10 w-10 text-primary mr-3" />
-            <h1 className="text-3xl font-bold text-foreground">Fraud & Claim Checker</h1>
+            <Target className="h-10 w-10 text-primary mr-3" />
+            <h1 className="text-3xl font-bold text-foreground">
+              Claim Success Predictor
+            </h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Advanced AI-powered analysis to detect suspicious patterns and prevent fraudulent insurance claims.
+            Estimate the likelihood of your motor insurance claim being
+            successful. Get AI-powered insights before filing your claim.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Checker Interface */}
+          {/* Main Form */}
           <div className="lg:col-span-3">
-            <FraudClaimChecker />
+            <ClaimSuccessPredictorForm />
           </div>
 
-          {/* Info Panel */}
-          <div className="space-y-6">
-            <Card className="border-border">
+          {/* Sidebar - Prediction Info Cards */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Prediction Accuracy Info */}
+            <Card className="sticky top-8">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
-                  <Eye className="h-5 w-5 text-primary mr-2" />
-                  Detection Methods
+                  <Brain className="h-5 w-5 text-primary mr-2" />
+                  AI Prediction
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Shield className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">Pattern Analysis</p>
-                    <p className="text-xs text-muted-foreground">Identifies suspicious claim patterns and duplicates</p>
+              <CardContent className="text-sm space-y-4">
+                <div className="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                  <div className="flex items-start">
+                    <TrendingUp className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div className="ml-2">
+                      <h4 className="font-semibold text-green-900">
+                        High Accuracy
+                      </h4>
+                      <p className="text-green-700">
+                        Based on 10,000+ Malaysian claims data
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">Risk Scoring</p>
-                    <p className="text-xs text-muted-foreground">AI-powered risk assessment for each claim</p>
+                <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                  <div className="flex items-start">
+                    <BarChart3 className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="ml-2">
+                      <h4 className="font-semibold text-blue-900">
+                        Success Factors
+                      </h4>
+                      <p className="text-blue-700">
+                        Incident type, documentation, timing
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <TrendingDown className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">Anomaly Detection</p>
-                    <p className="text-xs text-muted-foreground">Spots unusual claim amounts and circumstances</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="text-lg">Fraud Prevention Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Detection Rate</span>
-                    <span className="font-bold text-green-600">94.7%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">False Positives</span>
-                    <span className="font-bold text-amber-600">2.1%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Money Saved</span>
-                    <span className="font-bold text-primary">$2.4M</span>
+                <div className="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                  <div className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                    <div className="ml-2">
+                      <h4 className="font-semibold text-purple-900">
+                        Instant Results
+                      </h4>
+                      <p className="text-purple-700">
+                        Get prediction in seconds
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            {/* Key Factors Card */}
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Common Red Flags</CardTitle>
+                <CardTitle className="flex items-center text-lg">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+                  Key Success Factors
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border-l-4 border-l-red-500">
-                    <p className="font-medium text-red-900 dark:text-red-100">Duplicate Claims</p>
-                    <p className="text-red-700 dark:text-red-200 text-xs">Same incident claimed multiple times</p>
-                  </div>
-                  <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border-l-4 border-l-amber-500">
-                    <p className="font-medium text-amber-900 dark:text-amber-100">Unusual Timing</p>
-                    <p className="text-amber-700 dark:text-amber-200 text-xs">
-                      Claims filed shortly after policy start
-                    </p>
-                  </div>
-                  <div className="p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border-l-4 border-l-orange-500">
-                    <p className="font-medium text-orange-900 dark:text-orange-100">Excessive Amounts</p>
-                    <p className="text-orange-700 dark:text-orange-200 text-xs">Claims significantly above average</p>
-                  </div>
+              <CardContent className="text-sm space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Police report filed within 24 hours</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Clear photo evidence</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span>Valid insurance coverage</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                  <span>No policy violations</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>Witness statements available</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Processing Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg">
+                  <Clock className="h-5 w-5 text-blue-500 mr-2" />
+                  Processing Info
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-3">
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium">Standard Claims:</p>
+                  <p className="text-muted-foreground">7-14 days</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium">Complex Claims:</p>
+                  <p className="text-muted-foreground">30-60 days</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium">Total Loss:</p>
+                  <p className="text-muted-foreground">45-90 days</p>
                 </div>
               </CardContent>
             </Card>
@@ -109,5 +149,5 @@ export default function ClaimsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
