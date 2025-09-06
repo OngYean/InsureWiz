@@ -7,6 +7,12 @@ python-dotenv
 pydantic
 pydantic-settings
 python-multipart
+pinecone-client
+langchain-pinecone
+langchain-community
+langchain-text-splitters
+tiktoken
+markdown
 
 # ML and AI dependencies
 torch
