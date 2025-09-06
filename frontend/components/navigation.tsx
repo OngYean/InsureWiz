@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
@@ -12,32 +12,42 @@ const navItems = [
   { name: "Advisor", href: "/advisor", icon: MessageSquare },
   { name: "Compare", href: "/compare", icon: BarChart3 },
   { name: "Claims", href: "/claims", icon: AlertTriangle },
-]
+];
 
 export function Navigation() {
-  const pathname = usePathname()
+  const pathname = usePathname();
   
   const getActiveItem = () => {
     const currentItem = navItems.find(item => item.href === pathname)
     return currentItem ? currentItem.name : "Home"
   }
+  // Function to check if the current path matches the nav item
+  const isActive = (href: string) => {
+    // Exact match for root path
+    if (href === "/" && pathname === "/") return true;
+    // For other paths, check if current path starts with the href
+    if (href !== "/" && pathname.startsWith(href)) return true;
+    return false;
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          <Shield className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold text-foreground">InsureWiz</span>
-        </Link>
+        <div className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <Shield className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">InsureWiz</span>
+          </Link>
+        </div>
 
         <div className="flex items-center space-x-1">
           {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = getActiveItem() === item.name
+            const Icon = item.icon;
+            const isActive = getActiveItem() === item.name;
             return (
               <Button
                 key={item.name}
-                variant={isActive ? "default" : "ghost"}
+                variant={isActive(item.href) ? "default" : "ghost"}
                 size="sm"
                 className="flex items-center space-x-2 rounded-lg transition-all duration-200"
                 asChild
@@ -47,7 +57,7 @@ export function Navigation() {
                   <span>{item.name}</span>
                 </Link>
               </Button>
-            )
+            );
           })}
           <div className="ml-2 pl-2 border-l border-border">
             <ThemeToggle />
@@ -55,5 +65,5 @@ export function Navigation() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

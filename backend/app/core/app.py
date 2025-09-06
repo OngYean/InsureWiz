@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import chat, health
 from app.services.validator.api_endpoints import router as validator_router
+from app.api import chat, health, claim
+from app.comparator.api import comparator_router
 from app.utils.logger import setup_logger
 from app.utils.exceptions import handle_insurewiz_exception, InsureWizException
 from app.middleware.logging import LoggingMiddleware
+from app.core.startup import create_startup_event
 
 # Configure logging
 logger = setup_logger("insurewiz")
@@ -38,6 +40,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(chat.router)
     app.include_router(validator_router)
+    app.include_router(claim.router, prefix="/advanced", tags=["Advanced Claims"])
+    app.include_router(comparator_router)
     
     # Add exception handler for custom exceptions
     @app.exception_handler(InsureWizException)
@@ -56,6 +60,9 @@ def create_app() -> FastAPI:
     @app.on_event("shutdown")
     async def shutdown_event():
         logger.info("Shutting down InsureWiz AI Chatbot API...")
+    
+    # Initialize RAG and knowledge base services
+    create_startup_event(app)
     
     return app
 

@@ -29,6 +29,20 @@ class AIServiceException(InsureWizException):
             details=details
         )
 
+class VectorStoreException(InsureWizException):
+    """Exception raised when vector store operations fail"""
+    
+    def __init__(
+        self,
+        message: str = "Vector store error occurred",
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            details=details
+        )
+
 class ValidationException(InsureWizException):
     """Exception raised when data validation fails"""
     

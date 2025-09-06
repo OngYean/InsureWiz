@@ -1,0 +1,92 @@
+nohup: ignoring input
+WARNING:app.comparator.services.crawler:Crawl4AI not implemented. Using stub extractor.
+/home/ongyn/.local/lib/python3.10/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'schema_extra' has been renamed to 'json_schema_extra'
+  warnings.warn(message, UserWarning)
+INFO:app.comparator.scrapers.base:Registered scraper for Zurich Malaysia
+INFO:app.comparator.scrapers.base:Registered scraper for Etiqa
+/home/ongyn/Documents/InsureWiz/backend/app/comparator/chains/extraction.py:140: LangChainDeprecationWarning: The class `LLMChain` was deprecated in LangChain 0.1.17 and will be removed in 1.0. Use :meth:`~RunnableSequence, e.g., `prompt | llm`` instead.
+  return LLMChain(
+INFO:app.comparator.database.supabase:Supabase client initialized successfully
+INFO:app.comparator.services.pdf_generator:PDF Generator initialized. Template dir: /home/ongyn/Documents/InsureWiz/backend/app/comparator/templates, Output dir: reports/generated
+INFO:__main__:✅ Simple router included
+INFO:__main__:✅ Advanced router included
+INFO:__main__:✅ Dynamic scraping router included
+INFO:__main__:✅ Claim prediction router included
+INFO:     Started server process [552938]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 82%
+WARNING:app.ml.predict:Policy text too short or empty
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 82%, Confidence: 0.950, Confidence Score: 0.779
+INFO:app.api.claim:Prediction completed successfully: 82%
+Regression model loaded successfully.
+CV model loaded successfully.
+🚀 Starting InsureWiz Dynamic Comparator...
+📊 Real-time scraping: ENABLED
+🤖 AI analysis: ENABLED
+💾 Database storage: ENABLED
+📍 Server: http://localhost:8000
+📖 Documentation: http://localhost:8000/docs
+🔍 Dynamic endpoints: /dynamic/*
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bafad10c70>
+INFO:     127.0.0.1:40968 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 65%
+WARNING:app.ml.predict:Policy text too short or empty
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 65%, Confidence: 0.800, Confidence Score: 0.52
+INFO:app.api.claim:Prediction completed successfully: 65%
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bb81101620>
+INFO:     127.0.0.1:40984 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 45%
+WARNING:app.ml.predict:Policy text too short or empty
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 45%, Confidence: 0.745, Confidence Score: 0.335
+INFO:app.api.claim:Prediction completed successfully: 45%
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bafe563920>
+INFO:     127.0.0.1:40994 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 82%
+WARNING:app.ml.predict:Policy text too short or empty
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 82%, Confidence: 0.950, Confidence Score: 0.779
+INFO:app.api.claim:Prediction completed successfully: 82%
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bafad10c20>
+INFO:     127.0.0.1:54072 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 65%
+WARNING:app.ml.predict:Policy text too short or empty
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 65%, Confidence: 0.800, Confidence Score: 0.52
+INFO:app.api.claim:Prediction completed successfully: 65%
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bb81101990>
+INFO:     127.0.0.1:32774 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 65%
+INFO:app.ml.predict:AI insights generated successfully
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 65%, Confidence: 0.800, Confidence Score: 0.52
+INFO:app.api.claim:Prediction completed successfully: 65%
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bafacd3b00>
+INFO:     127.0.0.1:46036 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+INFO:app.ml.predict:Regression prediction successful: 65%
+WARNING:pypdf._reader:incorrect startxref pointer(1)
+WARNING:pypdf._reader:parsing for Object Streams
+WARNING:app.ml.predict:Policy text too short or empty
+INFO:app.ml.predict:Complete prediction pipeline finished. Final prediction: 65%, Confidence: 0.800, Confidence Score: 0.52
+INFO:app.api.claim:Prediction completed successfully: 65%
+Warning: Could not process image: cannot identify image file <_io.BytesIO object at 0x72bb32bc4950>
+INFO:     127.0.0.1:55374 - "POST /advanced/claim HTTP/1.1" 200 OK
+INFO:app.api.claim:Starting claim prediction analysis
+INFO:app.ml.predict:Starting complete prediction pipeline
+ERROR:app.ml.predict:Prediction pipeline failed completely: 'int' object has no attribute 'lower'
+ERROR:app.api.claim:Prediction error: Prediction service temporarily unavailable: 'int' object has no attribute 'lower'
+ERROR:app.api.claim:Unexpected error in claim prediction: 500: {'message': 'Prediction service error', 'error': "Prediction service temporarily unavailable: 'int' object has no attribute 'lower'"}
+INFO:     127.0.0.1:53450 - "POST /advanced/claim HTTP/1.1" 500 Internal Server Error
