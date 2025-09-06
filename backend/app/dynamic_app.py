@@ -52,6 +52,13 @@ try:
 except Exception as e:
     logger.error(f"❌ Failed to include dynamic router: {e}")
 
+try:
+    from app.api.claim import router as claim_router
+    app.include_router(claim_router)
+    logger.info("✅ Claim prediction router included")
+except Exception as e:
+    logger.error(f"❌ Failed to include claim router: {e}")
+
 @app.get("/")
 async def root():
     """Root endpoint with full feature overview"""
