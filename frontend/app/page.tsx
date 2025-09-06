@@ -2,6 +2,7 @@ import { Navigation } from "@/components/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Car, MessageSquare, BarChart3, AlertTriangle, Shield, Zap, Users, TrendingUp } from "lucide-react"
+import Link from "next/link"
 
 export default function HomePage() {
   return (
@@ -23,71 +24,79 @@ export default function HomePage() {
 
         {/* Main Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                <Car className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Vehicle Validator</CardTitle>
-              <CardDescription>
-                Real-time validation and auto-correction for vehicle data with confidence scoring
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full bg-transparent" variant="outline">
-                Start Validation
-              </Button>
-            </CardContent>
-          </Card>
+          <Link href="/validator">
+            <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border h-full">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                  <Car className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-lg">Vehicle Validator</CardTitle>
+                <CardDescription>
+                  Real-time validation and auto-correction for vehicle data with confidence scoring
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" variant="outline">
+                  Start Validation
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-secondary/10 rounded-full w-fit">
-                <MessageSquare className="h-8 w-8 text-secondary" />
-              </div>
-              <CardTitle className="text-lg">AI Advisor</CardTitle>
-              <CardDescription>
-                Get personalized insurance advice in plain English with multilingual support
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full bg-transparent" variant="outline">
-                Ask Questions
-              </Button>
-            </CardContent>
-          </Card>
+          <Link href="/advisor">
+            <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border h-full">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-secondary/10 rounded-full w-fit">
+                  <MessageSquare className="h-8 w-8 text-secondary" />
+                </div>
+                <CardTitle className="text-lg">AI Advisor</CardTitle>
+                <CardDescription>
+                  Get personalized insurance advice in plain English with multilingual support
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" variant="outline">
+                  Ask Questions
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-chart-1/10 rounded-full w-fit">
-                <BarChart3 className="h-8 w-8 text-chart-1" />
-              </div>
-              <CardTitle className="text-lg">Smart Compare</CardTitle>
-              <CardDescription>
-                Side-by-side policy comparison with intelligent filtering and recommendations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full bg-transparent" variant="outline">
-                Compare Policies
-              </Button>
-            </CardContent>
-          </Card>
+          <Link href="/compare">
+            <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border h-full">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-chart-1/10 rounded-full w-fit">
+                  <BarChart3 className="h-8 w-8 text-chart-1" />
+                </div>
+                <CardTitle className="text-lg">Smart Compare</CardTitle>
+                <CardDescription>
+                  Side-by-side policy comparison with intelligent filtering and recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" variant="outline">
+                  Compare Policies
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-destructive/10 rounded-full w-fit">
-                <AlertTriangle className="h-8 w-8 text-destructive" />
-              </div>
-              <CardTitle className="text-lg">Fraud Checker</CardTitle>
-              <CardDescription>Advanced claim analysis to detect suspicious patterns and prevent fraud</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full bg-transparent" variant="outline">
-                Check Claims
-              </Button>
-            </CardContent>
-          </Card>
+          <Link href="/claims">
+            <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border h-full">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-destructive/10 rounded-full w-fit">
+                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                </div>
+                <CardTitle className="text-lg">Fraud Checker</CardTitle>
+                <CardDescription>Advanced claim analysis to detect suspicious patterns and prevent fraud</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" variant="outline">
+                  Check Claims
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Stats Section */}
@@ -123,12 +132,16 @@ export default function HomePage() {
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
             Join thousands of users who trust InsureWiz for smarter, faster, and more reliable insurance solutions.
           </p>
-          <Button size="lg" className="mr-4">
-            Get Started
-          </Button>
-          <Button size="lg" variant="outline">
-            Learn More
-          </Button>
+          <Link href="/validator">
+            <Button size="lg" className="mr-4">
+              Get Started
+            </Button>
+          </Link>
+          <Link href="/advisor">
+            <Button size="lg" variant="outline">
+              Learn More
+            </Button>
+          </Link>
         </div>
       </main>
     </div>

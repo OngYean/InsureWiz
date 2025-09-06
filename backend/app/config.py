@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     
     # AI Configuration
     google_api_key: str = os.getenv("GOOGLE_API_KEY", "")
+    tavily_api_key: str = os.getenv("TAVILY_API_KEY", "")
     ai_model: str = "gemini-2.0-flash"
     ai_temperature: float = 0.7
 
@@ -86,7 +87,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
-        extra = "ignore"  # Ignore extra fields from environment
+        extra = "ignore"  # Ignore extra environment variables
 
 # Global settings instance
 settings = Settings()

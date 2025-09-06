@@ -1,18 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  Shield,
-  Car,
-  MessageSquare,
-  BarChart3,
-  AlertTriangle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import { Shield, Car, MessageSquare, BarChart3, AlertTriangle, Home } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
+  { name: "Home", href: "/", icon: Home },
   { name: "Validator", href: "/validator", icon: Car },
   { name: "Advisor", href: "/advisor", icon: MessageSquare },
   { name: "Compare", href: "/compare", icon: BarChart3 },
@@ -21,7 +16,11 @@ const navItems = [
 
 export function Navigation() {
   const pathname = usePathname();
-
+  
+  const getActiveItem = () => {
+    const currentItem = navItems.find(item => item.href === pathname)
+    return currentItem ? currentItem.name : "Home"
+  }
   // Function to check if the current path matches the nav item
   const isActive = (href: string) => {
     // Exact match for root path
@@ -35,7 +34,7 @@ export function Navigation() {
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-2">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <Shield className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold text-foreground">InsureWiz</span>
           </Link>
@@ -44,6 +43,7 @@ export function Navigation() {
         <div className="flex items-center space-x-1">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isActive = getActiveItem() === item.name;
             return (
               <Button
                 key={item.name}

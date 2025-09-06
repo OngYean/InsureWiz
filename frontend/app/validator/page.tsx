@@ -1,9 +1,20 @@
+"use client"
+
+import { useState } from "react"
 import { Navigation } from "@/components/navigation"
-import { VehicleValidatorForm } from "@/components/vehicle-validator-form"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Car, CheckCircle, AlertCircle, Info } from "lucide-react"
+import EnhancedVehicleValidatorForm from "@/components/enhanced-vehicle-validator"
+import VehicleInfoDisplay from "@/components/vehicle-info-display"
+import { Car } from "lucide-react"
 
 export default function ValidatorPage() {
+  const [vehicleInfo, setVehicleInfo] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleVehicleInfoChange = (info: any, loading: boolean) => {
+    setVehicleInfo(info)
+    setIsLoading(loading)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -23,68 +34,12 @@ export default function ValidatorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <VehicleValidatorForm />
+            <EnhancedVehicleValidatorForm onVehicleInfoChange={handleVehicleInfoChange} />
           </div>
 
-          {/* Info Panel */}
+          {/* Vehicle Info Panel */}
           <div className="space-y-6">
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <Info className="h-5 w-5 text-primary mr-2" />
-                  How It Works
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">Real-time Validation</p>
-                    <p className="text-xs text-muted-foreground">
-                      Instant feedback as you type with smart error detection
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">Auto-correction</p>
-                    <p className="text-xs text-muted-foreground">
-                      Intelligent suggestions for typos and common mistakes
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <Car className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">Confidence Scoring</p>
-                    <p className="text-xs text-muted-foreground">See how confident we are in each validation result</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="text-lg">Validation Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Accuracy Rate</span>
-                    <span className="font-bold text-green-600">99.2%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Corrections Made</span>
-                    <span className="font-bold text-primary">1.2M+</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Time Saved</span>
-                    <span className="font-bold text-secondary">45 min/day</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <VehicleInfoDisplay vehicleInfo={vehicleInfo} isLoading={isLoading} />
           </div>
         </div>
       </main>

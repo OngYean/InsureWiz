@@ -1,12 +1,14 @@
 fastapi
-uvicorn
+uvicorn[standard]
 langchain
 langchain-google-genai
+langchain-community
 google-generativeai
 python-dotenv
 pydantic
 pydantic-settings
 python-multipart
+watchfiles
 pinecone-client
 langchain-pinecone
 langchain-community
