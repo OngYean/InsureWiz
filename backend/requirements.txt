@@ -13,5 +13,31 @@ langchain-community
 langchain-text-splitters
 tiktoken
 markdown
-beautifulsoup4
+
+# ML and AI dependencies
+torch
+torchvision
+scikit-learn
+pandas
+numpy
+joblib
+lightgbm
+datasets
+pillow
+
+# PDF processing and OCR dependencies
+pypdf
+pytesseract
+pdf2image
+reportlab
+
+# Malaysian Motor Insurance Comparator dependencies
+supabase
+crawl4ai
 tavily-python
+weasyprint
+jinja2
+aiohttp
+beautifulsoup4
+lxml
+html5lib

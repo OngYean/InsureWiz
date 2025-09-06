@@ -5,7 +5,10 @@ AI-powered insurance advisor backend built with FastAPI and LangChain.
 ## Features
 
 - 🤖 AI-powered insurance advice using Google Gemini
+- 🎯 Motor insurance claim success prediction with ML models
 - 💬 Conversational chat interface with memory
+- 📄 Advanced PDF processing with OCR fallback
+- 🔍 Computer vision analysis for damage detection
 - 🔒 Secure API endpoints
 - 📚 Comprehensive insurance knowledge base
 - 🚀 Fast and scalable FastAPI backend
@@ -14,24 +17,45 @@ AI-powered insurance advisor backend built with FastAPI and LangChain.
 
 - Python 3.8+ (tested with Python 3.13)
 - Google Generative AI API key
+- Tesseract OCR engine (for PDF processing fallback)
+
+### System Dependencies
+
+**Ubuntu/Debian:**
+
+```bash
+sudo apt-get install tesseract-ocr libtesseract-dev
+```
+
+**macOS:**
+
+```bash
+brew install tesseract
+```
+
+**Windows:**
+Download from [Tesseract GitHub releases](https://github.com/UB-Mannheim/tesseract/wiki)
 
 ## Installation
 
 1. **Clone the repository** (if not already done):
+
    ```bash
    cd backend
    ```
 
 2. **Install dependencies**:
+
    ```bash
    python -m pip install -r requirements.txt
    ```
 
 3. **Set up environment variables**:
+
    ```bash
    # Copy the example environment file
    cp env.example .env
-   
+
    # Edit .env and add your Google API key
    GOOGLE_API_KEY=your_actual_api_key_here
    ```
@@ -46,16 +70,19 @@ AI-powered insurance advisor backend built with FastAPI and LangChain.
 ## Running the Server
 
 ### Option 1: Using the startup script
+
 ```bash
 python start_server.py
 ```
 
 ### Option 2: Using the main entry point
+
 ```bash
 python run.py
 ```
 
 ### Option 3: Using uvicorn directly
+
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
@@ -65,18 +92,22 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 - **GET /** - Health check
 - **GET /health** - Service status
 - **POST /api/chat** - Chat with AI advisor
+- **POST /api/advanced/claim** - Predict claim success rate
+- **GET /api/advanced/health** - Claim predictor status
 - **GET /api/conversations/{id}** - Get conversation history
 - **DELETE /api/conversations/{id}** - Delete conversation
 
 ## API Documentation
 
 Once the server is running, visit:
+
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
 ## Example Usage
 
 ### Start a chat conversation:
+
 ```bash
 curl -X POST "http://localhost:8000/api/chat" \
      -H "Content-Type: application/json" \
@@ -84,8 +115,24 @@ curl -X POST "http://localhost:8000/api/chat" \
 ```
 
 ### Get conversation history:
+
 ```bash
 curl "http://localhost:8000/api/conversations/conv_1"
+```
+
+### Predict claim success (using form with files):
+
+```bash
+curl -X POST "http://localhost:8000/api/advanced/claim" \
+     -F "policy_document=@policy.pdf" \
+     -F "evidence_files=@accident_photo.jpg" \
+     -F 'form_data_json={"incidentType":"collision","driver_age":"25","weatherConditions":"clear"}'
+```
+
+### Check claim predictor health:
+
+```bash
+curl "http://localhost:8000/api/advanced/health"
 ```
 
 ## Troubleshooting
@@ -99,12 +146,14 @@ curl "http://localhost:8000/api/conversations/conv_1"
 ### Dependency Issues
 
 If you encounter Rust compilation errors:
+
 - The current requirements.txt uses compatible versions that don't require Rust
 - If you need newer versions, you may need to install Rust toolchain
 
 ## Development
 
 ### Project Structure
+
 ```
 backend/
 ├── main.py              # Main FastAPI application

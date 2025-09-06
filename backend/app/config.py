@@ -29,11 +29,15 @@ class Settings(BaseSettings):
     google_api_key: str = os.getenv("GOOGLE_API_KEY", "")
     ai_model: str = "gemini-2.0-flash"
     ai_temperature: float = 0.7
-    
+
     # Tavily Configuration
     tavily_api_key: str = os.getenv("TAVILY_API_KEY", "")
     tavily_search_depth: str = "advanced"  # basic, advanced
     tavily_max_results: int = 10  # Increased for better coverage
+      
+    # Comparator Configuration
+    supabase_url: str = os.getenv("SUPABASE_URL", "")
+    supabase_key: str = os.getenv("SUPABASE_KEY", "")
     
     # Advanced Tavily Search Parameters
     tavily_include_domains: List[str] = [

@@ -7,6 +7,7 @@ InsureWiz is a comprehensive insurance platform that combines modern web technol
 - **🤖 AI Insurance Advisor**: Intelligent chatbot powered by LangChain and Google Gemini
 - **📊 Policy Comparison**: Compare different insurance policies and coverage options
 - **🔍 Claims Processing**: Streamlined claims submission and tracking
+- **🎯 Claim Success Predictor**: AI-powered prediction of insurance claim success rates
 - **🚗 Vehicle Validation**: Comprehensive vehicle information validation
 - **🎨 Modern UI**: Beautiful, responsive interface built with Next.js and Tailwind CSS
 - **💬 Real-time Chat**: Live AI assistance for insurance questions
@@ -35,7 +36,24 @@ InsureWiz is a comprehensive insurance platform that combines modern web technol
    - Start the frontend development server
    - Open both in separate windows
 
-### Option 2: Manual Startup
+### Option 2: Automated Startup (Linux)
+
+1. **Run** the following command in your terminal:
+
+   ```bash
+   bash start-project.sh
+   ```
+
+   > If the terminal shows **Permission denied**, consider running the command above with `sudo`.
+
+2. The script will automatically:
+
+   - Check prerequisites (Python, Node.js)
+   - Start the AI backend server in a new terminal window
+   - Start the frontend development server in a new terminal window (using `next dev`)
+   - Show URLs and tips for stopping servers
+
+### Option 3: Manual Startup
 
 #### 1. Start the AI Backend
 
@@ -60,6 +78,7 @@ cp env.example .env
 ```
 
 **Getting a Google API Key:**
+
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Sign in with your Google account
 3. Click "Create API Key"
@@ -107,6 +126,7 @@ The frontend automatically connects to the backend at `http://localhost:8000`. I
 ## 📚 API Documentation
 
 Once the backend is running, visit:
+
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
@@ -115,6 +135,8 @@ Once the backend is running, visit:
 - `POST /api/chat` - Send message to AI advisor
 - `GET /api/conversations/{id}` - Get conversation history
 - `DELETE /api/conversations/{id}` - Delete conversation
+- `POST /api/advanced/claim` - Predict insurance claim success rate
+- `GET /api/advanced/health` - Claim predictor health check
 - `GET /health` - Health check
 
 ## 🎯 Usage
@@ -125,6 +147,14 @@ Once the backend is running, visit:
 2. Ask questions about insurance concepts, policies, or claims
 3. Get intelligent, contextual responses powered by Google Gemini
 4. Maintain conversation context across sessions
+
+### Claim Success Predictor
+
+1. Navigate to the Claims page
+2. Fill out the comprehensive 7-step form with incident details
+3. Upload policy documents and evidence files
+4. Get AI-powered prediction of claim success probability
+5. Receive detailed insights and recommendations
 
 ### Policy Comparison
 
@@ -235,19 +265,23 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Common Issues
 
 1. **Backend Connection Failed**
+
    - Ensure Python virtual environment is activated
    - Check that all dependencies are installed
    - Verify Google API key is set correctly
 
 2. **Frontend Build Errors**
+
    - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
    - Check Node.js version compatibility
 
 3. **Port Already in Use**
+
    - Change ports in configuration files
    - Kill processes using the ports: `netstat -ano | findstr :8000`
 
 4. **Gemini API Issues**
+
    - Check your Google AI Studio quota and billing status
    - Verify API key is valid and has proper permissions
 

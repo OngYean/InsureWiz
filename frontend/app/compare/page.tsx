@@ -1,7 +1,7 @@
 import { Navigation } from "@/components/navigation"
-import { InsurancePolicyComparison } from "@/components/insurance-policy-comparison"
+import { DynamicInsuranceComparison } from "@/components/dynamic-insurance-comparison"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart3, Filter, TrendingUp, Users } from "lucide-react"
+import { BarChart3, Brain, Zap, TrendingUp, Shield, Clock } from "lucide-react"
 
 export default function ComparePage() {
   return (
@@ -13,18 +13,50 @@ export default function ComparePage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <BarChart3 className="h-10 w-10 text-primary mr-3" />
-            <h1 className="text-3xl font-bold text-foreground">Smart Comparison Tool</h1>
+            <h1 className="text-3xl font-bold text-foreground">Live Insurance Comparison</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Compare insurance policies side-by-side with intelligent filtering to find the perfect coverage for your
-            needs.
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Get real-time quotes from Malaysian insurers with AI-powered analysis and recommendations. 
+            Compare policies instantly with live pricing and coverage data.
           </p>
         </div>
 
+        {/* Features Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="text-center border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <Zap className="h-8 w-8 text-primary mx-auto mb-2" />
+              <h3 className="font-semibold text-sm">Real-time Data</h3>
+              <p className="text-xs text-muted-foreground">Live quotes from insurers</p>
+            </CardContent>
+          </Card>
+          <Card className="text-center border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <Brain className="h-8 w-8 text-primary mx-auto mb-2" />
+              <h3 className="font-semibold text-sm">AI Analysis</h3>
+              <p className="text-xs text-muted-foreground">Smart recommendations</p>
+            </CardContent>
+          </Card>
+          <Card className="text-center border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
+              <h3 className="font-semibold text-sm">Market Insights</h3>
+              <p className="text-xs text-muted-foreground">Pricing trends & analysis</p>
+            </CardContent>
+          </Card>
+          <Card className="text-center border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <Shield className="h-8 w-8 text-primary mx-auto mb-2" />
+              <h3 className="font-semibold text-sm">Best Coverage</h3>
+              <p className="text-xs text-muted-foreground">Tailored to your needs</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Comparison Interface */}
+          {/* Main Comparison Interface */}
           <div className="lg:col-span-3">
-            <InsurancePolicyComparison />
+            <DynamicInsuranceComparison />
           </div>
 
           {/* Info Panel */}
@@ -32,30 +64,45 @@ export default function ComparePage() {
             <Card className="border-border">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
-                  <Filter className="h-5 w-5 text-primary mr-2" />
-                  Smart Filters
+                  <Clock className="h-5 w-5 text-primary mr-2" />
+                  How It Works
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <Users className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                    1
+                  </div>
                   <div>
-                    <p className="font-medium text-sm">Age-Based</p>
-                    <p className="text-xs text-muted-foreground">Policies optimized for your age group</p>
+                    <p className="font-medium text-sm">Set Your Preferences</p>
+                    <p className="text-xs text-muted-foreground">Vehicle type, coverage, and budget</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <TrendingUp className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                    2
+                  </div>
                   <div>
-                    <p className="font-medium text-sm">Value-Based</p>
-                    <p className="text-xs text-muted-foreground">Coverage matched to your vehicle's worth</p>
+                    <p className="font-medium text-sm">Live Data Scraping</p>
+                    <p className="text-xs text-muted-foreground">Real-time quotes from top insurers</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <BarChart3 className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                    3
+                  </div>
                   <div>
-                    <p className="font-medium text-sm">Location-Based</p>
-                    <p className="text-xs text-muted-foreground">Rates adjusted for your area's risk factors</p>
+                    <p className="font-medium text-sm">AI Analysis</p>
+                    <p className="text-xs text-muted-foreground">Smart recommendations and insights</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                    4
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Compare & Choose</p>
+                    <p className="text-xs text-muted-foreground">Download detailed PDF report</p>
                   </div>
                 </div>
               </CardContent>
@@ -63,50 +110,58 @@ export default function ComparePage() {
 
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-lg">Comparison Tips</CardTitle>
+                <CardTitle className="flex items-center text-lg">
+                  <Shield className="h-5 w-5 text-primary mr-2" />
+                  Covered Insurers
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border-l-4 border-l-blue-500">
-                    <p className="font-medium text-blue-900 dark:text-blue-100">Coverage Limits</p>
-                    <p className="text-blue-700 dark:text-blue-200 text-xs">
-                      Higher limits mean better protection but cost more
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border-l-4 border-l-green-500">
-                    <p className="font-medium text-green-900 dark:text-green-100">Deductibles</p>
-                    <p className="text-green-700 dark:text-green-200 text-xs">
-                      Higher deductibles lower premiums but increase out-of-pocket costs
-                    </p>
-                  </div>
-                  <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border-l-4 border-l-amber-500">
-                    <p className="font-medium text-amber-900 dark:text-amber-100">Discounts</p>
-                    <p className="text-amber-700 dark:text-amber-200 text-xs">
-                      Look for multi-policy, safe driver, and loyalty discounts
-                    </p>
-                  </div>
+              <CardContent className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Zurich Malaysia</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Etiqa</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Allianz General</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Great Eastern</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Tokio Marine</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            <Card className="border-border bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg">Market Insights</CardTitle>
+                <CardTitle className="flex items-center text-lg">
+                  <Brain className="h-5 w-5 text-primary mr-2" />
+                  AI Features
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Avg. Premium</span>
-                    <span className="font-bold text-primary">$1,483/year</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Best Value</span>
-                    <span className="font-bold text-green-600">SafeGuard Plus</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Most Popular</span>
-                    <span className="font-bold text-secondary">Premium Shield</span>
-                  </div>
+              <CardContent className="space-y-3">
+                <div className="text-sm">
+                  <p className="font-medium">✨ Smart Scoring</p>
+                  <p className="text-xs text-muted-foreground">Multi-factor analysis for best match</p>
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium">📊 Market Analysis</p>
+                  <p className="text-xs text-muted-foreground">Real-time pricing trends</p>
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium">🎯 Personalized</p>
+                  <p className="text-xs text-muted-foreground">Tailored to your profile</p>
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium">📄 PDF Reports</p>
+                  <p className="text-xs text-muted-foreground">Detailed comparison documents</p>
                 </div>
               </CardContent>
             </Card>

@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import chat, health
+from app.api import chat, health, claim
+from app.comparator.api import comparator_router
 from app.utils.logger import setup_logger
 from app.utils.exceptions import handle_insurewiz_exception, InsureWizException
 from app.middleware.logging import LoggingMiddleware
@@ -37,6 +38,8 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health.router)
     app.include_router(chat.router)
+    app.include_router(claim.router, prefix="/advanced", tags=["Advanced Claims"])
+    app.include_router(comparator_router)
     
     # Add exception handler for custom exceptions
     @app.exception_handler(InsureWizException)

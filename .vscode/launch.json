@@ -40,6 +40,18 @@
       "runtimeArgs": ["start"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Launch: Start Project",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "Start Project"
+    },
+    {
+      "name": "Launch: Run Backend",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "Run Backend"
     }
   ]
 }
