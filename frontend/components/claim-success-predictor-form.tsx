@@ -23,7 +23,6 @@ import {
   FileImage,
   MapPin,
   Target,
-  TrendingUp,
   Upload,
   Car,
   Camera,
@@ -39,7 +38,6 @@ import Speedometer from "./speedometer";
 interface PredictionResult {
   prediction: number;
   confidence: number;
-  key_factors: string[];
   ai_insights: string;
 }
 
@@ -58,17 +56,24 @@ export function ClaimSuccessPredictorForm() {
     weatherConditions: "",
     injuries: "no",
 
-    // Vehicle & Documentation
+    // Vehicle & Driver Information
+    driver_age: "",
+    vehicle_age: "",
+    engine_capacity: "",
+    market_value: "",
+    vehicleDamage: "",
+
+    // Documentation & Parties
     thirdPartyVehicle: "no",
     witnesses: "no",
     policeReport: "no",
     policeReportFiledWithin24h: 0,
     trafficViolation: 0,
     previousClaims: 0,
-    description: "",
+    incident_description: "",
   });
 
-  const totalSteps = 5;
+  const totalSteps = 7;
 
   const updateFormData = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -131,17 +136,19 @@ export function ClaimSuccessPredictorForm() {
 
       const result = await response.json();
       setPrediction(result);
+      // Don't automatically navigate - let user control when to view results
+      // setCurrentStep(7);
     } catch (error) {
       console.error("Error submitting form:", error);
       // Display an error message to the user
       setPrediction({
         prediction: 0,
         confidence: 0,
-        key_factors: [
-          "An error occurred while fetching the prediction. Please try again.",
-        ],
-        ai_insights: "Could not generate AI insights due to an error.",
+        ai_insights:
+          "Could not generate AI insights due to an error. Please try again.",
       });
+      // Don't automatically navigate on error either
+      // setCurrentStep(7);
     } finally {
       setIsLoading(false);
     }
@@ -171,13 +178,18 @@ export function ClaimSuccessPredictorForm() {
       roadConditions: "",
       weatherConditions: "",
       injuries: "no",
+      driver_age: "",
+      vehicle_age: "",
+      engine_capacity: "",
+      market_value: "",
+      vehicleDamage: "",
       thirdPartyVehicle: "no",
       witnesses: "no",
       policeReport: "no",
       policeReportFiledWithin24h: 0,
       trafficViolation: 0,
       previousClaims: 0,
-      description: "",
+      incident_description: "",
     });
   };
 
@@ -298,7 +310,9 @@ export function ClaimSuccessPredictorForm() {
             <div className="space-y-6">
               <div className="flex items-center mb-4">
                 <FileText className="h-5 w-5 text-primary mr-2" />
-                <h3 className="text-lg font-semibold">Policy and Vehicle</h3>
+                <h3 className="text-lg font-semibold">
+                  Vehicle & Damage Assessment
+                </h3>
               </div>
 
               <div className="space-y-2">
@@ -313,45 +327,160 @@ export function ClaimSuccessPredictorForm() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Any Injuries?</Label>
-                <RadioGroup
-                  value={formData.injuries}
-                  onValueChange={(value) => updateFormData("injuries", value)}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <div>
-                    <RadioGroupItem
-                      value="yes"
-                      id="injuries-yes"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="injuries-yes"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-primary/10 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      Yes
-                    </Label>
-                  </div>
-                  <div>
-                    <RadioGroupItem
-                      value="no"
-                      id="injuries-no"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="injuries-no"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-primary/10 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      No
-                    </Label>
-                  </div>
-                </RadioGroup>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Any Injuries?</Label>
+                  <RadioGroup
+                    value={formData.injuries}
+                    onValueChange={(value) => updateFormData("injuries", value)}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <RadioGroupItem
+                        value="yes"
+                        id="injuries-yes"
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor="injuries-yes"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-primary/10 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        Yes
+                      </Label>
+                    </div>
+                    <div>
+                      <RadioGroupItem
+                        value="no"
+                        id="injuries-no"
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor="injuries-no"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-primary/10 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        No
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleDamage">Vehicle Damage Severity</Label>
+                  <Select
+                    value={formData.vehicleDamage}
+                    onValueChange={(value) =>
+                      updateFormData("vehicleDamage", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select damage level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minor">
+                        Minor (Scratches, small dents)
+                      </SelectItem>
+                      <SelectItem value="moderate">
+                        Moderate (Significant dents, broken lights)
+                      </SelectItem>
+                      <SelectItem value="severe">
+                        Severe (Major structural damage)
+                      </SelectItem>
+                      <SelectItem value="total">Total Loss</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           )}
 
           {currentStep === 3 && (
+            <div className="space-y-6">
+              <div className="flex items-center mb-4">
+                <Car className="h-5 w-5 text-primary mr-2" />
+                <h3 className="text-lg font-semibold">
+                  Driver & Vehicle Information
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="driver_age">Driver Age</Label>
+                  <Input
+                    id="driver_age"
+                    type="number"
+                    placeholder="e.g., 25"
+                    min="16"
+                    max="100"
+                    value={formData.driver_age}
+                    onChange={(e) =>
+                      updateFormData(
+                        "driver_age",
+                        parseInt(e.target.value) || ""
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle_age">Vehicle Age (years)</Label>
+                  <Input
+                    id="vehicle_age"
+                    type="number"
+                    placeholder="e.g., 5"
+                    min="0"
+                    max="50"
+                    value={formData.vehicle_age}
+                    onChange={(e) =>
+                      updateFormData(
+                        "vehicle_age",
+                        parseInt(e.target.value) || ""
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="engine_capacity">Engine Capacity (CC)</Label>
+                  <Input
+                    id="engine_capacity"
+                    type="number"
+                    placeholder="e.g., 1500"
+                    min="600"
+                    max="8000"
+                    value={formData.engine_capacity}
+                    onChange={(e) =>
+                      updateFormData(
+                        "engine_capacity",
+                        parseInt(e.target.value) || ""
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="market_value">
+                    Vehicle Market Value (RM)
+                  </Label>
+                  <Input
+                    id="market_value"
+                    type="number"
+                    placeholder="e.g., 45000"
+                    min="1000"
+                    max="1000000"
+                    value={formData.market_value}
+                    onChange={(e) =>
+                      updateFormData(
+                        "market_value",
+                        parseInt(e.target.value) || ""
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
             <div className="space-y-6">
               <div className="flex items-center mb-4">
                 <Users className="h-5 w-5 text-primary mr-2" />
@@ -438,7 +567,7 @@ export function ClaimSuccessPredictorForm() {
             </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <div className="space-y-6">
               <div className="flex items-center mb-4">
                 <Camera className="h-5 w-5 text-primary mr-2" />
@@ -554,7 +683,7 @@ export function ClaimSuccessPredictorForm() {
             </div>
           )}
 
-          {currentStep === 5 && (
+          {currentStep === 6 && (
             <div className="space-y-6">
               <div className="flex items-center mb-4">
                 <AlertCircle className="h-5 w-5 text-primary mr-2" />
@@ -629,19 +758,70 @@ export function ClaimSuccessPredictorForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">
+                <Label htmlFor="incident_description">
                   Brief Description of Incident
                 </Label>
                 <Textarea
-                  id="description"
+                  id="incident_description"
                   placeholder="Provide a brief description of what happened..."
-                  value={formData.description}
+                  value={formData.incident_description}
                   onChange={(e) =>
-                    updateFormData("description", e.target.value)
+                    updateFormData("incident_description", e.target.value)
                   }
                   className="min-h-[100px]"
                 />
               </div>
+
+              {/* Submission Status */}
+              {prediction && !isLoading && (
+                <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center mb-2">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                    <h4 className="font-semibold text-green-800">
+                      Analysis Complete!
+                    </h4>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    Your claim has been analyzed successfully. Click "View
+                    Results" to see detailed insights and predictions.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 7 && (
+            <div className="space-y-6">
+              <div className="flex items-center mb-4">
+                <Target className="h-5 w-5 text-primary mr-2" />
+                <h3 className="text-lg font-semibold">Prediction Results</h3>
+              </div>
+
+              {isLoading && !prediction && (
+                <div className="text-center p-8">
+                  <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                </div>
+              )}
+
+              {prediction && !isLoading && (
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center justify-center">
+                    <Speedometer value={prediction.prediction} />
+                  </div>
+
+                  {prediction.ai_insights && (
+                    <div className="space-y-2 p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                      <h4 className="font-semibold text-purple-800 flex items-center">
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        AI-Powered Insights
+                      </h4>
+                      <p className="text-sm text-purple-700">
+                        {prediction.ai_insights}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -656,75 +836,44 @@ export function ClaimSuccessPredictorForm() {
               Previous
             </Button>
 
-            {currentStep < totalSteps ? (
+            {currentStep < 6 ? (
               <Button type="button" onClick={nextStep}>
                 Next
               </Button>
-            ) : (
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  "Get Prediction"
+            ) : currentStep === 6 ? (
+              <div className="flex gap-2">
+                {!prediction && !isLoading && (
+                  <Button type="submit" disabled={isLoading}>
+                    Get Prediction
+                  </Button>
                 )}
+                {isLoading && (
+                  <Button type="submit" disabled={true}>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  </Button>
+                )}
+                {prediction && !isLoading && (
+                  <>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      disabled={isLoading}
+                    >
+                      Reanalyze
+                    </Button>
+                    <Button type="button" onClick={nextStep}>
+                      View Results
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Button onClick={resetForm} variant="outline">
+                Check Another Claim
               </Button>
             )}
           </div>
         </form>
-
-        {/* Prediction Result Section */}
-        {isLoading && !prediction && (
-          <div className="text-center p-8">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground">
-              Analyzing your claim details...
-            </p>
-          </div>
-        )}
-
-        {prediction && !isLoading && (
-          <div className="pt-8 space-y-6">
-            <div className="flex flex-col items-center justify-center">
-              <Speedometer value={prediction.prediction} />
-            </div>
-
-            {prediction.ai_insights && (
-              <div className="space-y-2 p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-                <h4 className="font-semibold text-purple-800 flex items-center">
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  AI-Powered Insights
-                </h4>
-                <p className="text-sm text-purple-700">
-                  {prediction.ai_insights}
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-semibold text-blue-700 flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Key Factors
-              </h4>
-              {prediction.key_factors.map((factor, index) => (
-                <div
-                  key={index}
-                  className="text-sm p-2 bg-blue-50 rounded border-l-4 border-blue-500"
-                >
-                  {factor}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <Button onClick={resetForm} variant="outline" className="flex-1">
-                Check Another Claim
-              </Button>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

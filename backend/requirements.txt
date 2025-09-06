@@ -8,6 +8,23 @@ pydantic
 pydantic-settings
 python-multipart
 
+# ML and AI dependencies
+torch
+torchvision
+scikit-learn
+pandas
+numpy
+joblib
+lightgbm
+datasets
+pillow
+
+# PDF processing and OCR dependencies
+pypdf
+pytesseract
+pdf2image
+reportlab
+
 # Malaysian Motor Insurance Comparator dependencies
 supabase
 crawl4ai

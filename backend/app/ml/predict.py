@@ -208,7 +208,7 @@ def calculate_prediction_score(form_data: Dict[str, Any], image_labels: List[str
         score -= 5   # Very small engines may indicate basic coverage
     
     # Factor 5: Incident description analysis
-    incident_desc = form_data.get("incident_description", "").lower()
+    incident_desc = str(form_data.get("incident_description", "")).lower()
     if any(word in incident_desc for word in ["hit", "rear-end", "collision"]):
         score += 10  # Clear impact scenarios
     if any(word in incident_desc for word in ["parking", "stationary"]):
@@ -229,6 +229,73 @@ def calculate_prediction_score(form_data: Dict[str, Any], image_labels: List[str
     
     # Ensure score is within bounds
     return max(5, min(95, score))
+
+def calculate_confidence_score(form_data: Dict[str, Any], image_labels: List[str], evidence_files: List[bytes]) -> float:
+    """
+    Calculate a confidence score based on data quality and completeness.
+    
+    Args:
+        form_data: Dictionary containing form fields
+        image_labels: List of detected damage labels from images
+        evidence_files: List of uploaded evidence files
+        
+    Returns:
+        Confidence score between 0.1 and 1.0
+    """
+    confidence = 0.3  # Lower base confidence
+    
+    # Factor 1: Completeness of form data
+    required_fields = ['incident_description', 'driver_age', 'vehicle_age', 'engine_capacity', 'market_value']
+    optional_fields = ['incidentType', 'timeOfDay', 'roadConditions', 'weatherConditions', 'injuries', 
+                      'vehicleDamage', 'thirdPartyVehicle', 'witnesses', 'policeReport', 
+                      'policeReportFiledWithin24h', 'trafficViolation', 'previousClaims']
+    
+    # Check required fields
+    complete_required = sum(1 for field in required_fields if form_data.get(field) is not None)
+    confidence += (complete_required / len(required_fields)) * 0.15
+    
+    # Check optional fields (ML model features) - more gradual scaling
+    complete_optional = sum(1 for field in optional_fields if form_data.get(field) is not None)
+    confidence += (complete_optional / len(optional_fields)) * 0.25
+    
+    # Factor 2: Evidence quality
+    if evidence_files and len(evidence_files) > 0:
+        confidence += 0.15  # Base evidence bonus
+        if len(evidence_files) > 1:
+            confidence += 0.05  # Multiple evidence files
+        if image_labels and any("damage" in str(label).lower() for label in image_labels):
+            confidence += 0.15  # Clear damage detected
+    else:
+        confidence -= 0.2  # Significant penalty for no evidence
+    
+    # Factor 3: Incident description quality
+    incident_desc = str(form_data.get("incident_description", ""))
+    if len(incident_desc) > 50:
+        confidence += 0.05  # Detailed description
+    if len(incident_desc) > 100:
+        confidence += 0.05  # Very detailed description
+    
+    # Factor 4: Documentation completeness
+    police_report = str(form_data.get("policeReport", "")).lower()
+    if police_report == "yes":
+        confidence += 0.1
+        if str(form_data.get("policeReportFiledWithin24h", "")).lower() == "yes":
+            confidence += 0.05  # Timely police report
+    
+    # Factor 5: Witness availability
+    if str(form_data.get("witnesses", "")).lower() == "yes":
+        confidence += 0.05
+    
+    # Factor 6: Risk indicators (negative impact)
+    if str(form_data.get("injuries", "")).lower() == "yes":
+        confidence -= 0.05  # Injuries complicate claims
+    if str(form_data.get("weatherConditions", "")).lower() in ["rain", "snow", "fog"]:
+        confidence -= 0.03  # Poor weather reduces certainty
+    if str(form_data.get("trafficViolation", "")).lower() == "yes":
+        confidence -= 0.1  # Traffic violations reduce confidence
+    
+    # Ensure confidence is within bounds
+    return max(0.1, min(0.9, confidence))  # Cap at 0.9 to leave room for variation
 
 def run_prediction(
     form_data: Dict[str, Any], 
@@ -262,9 +329,11 @@ def run_prediction(
         
         # Create a base prediction response with calculated score
         base_score = calculate_prediction_score(form_data, image_labels)
+        base_confidence = round(calculate_confidence_score(form_data, image_labels, evidence_files), 3)
+        
         result = {
             "prediction": base_score,
-            "confidence": 0.85,
+            "confidence": base_confidence,
             "key_factors": [
                 "incident_description_analysis",
                 "evidence_file_analysis" if evidence_files else "no_evidence_provided",
@@ -279,6 +348,8 @@ def run_prediction(
             if regression_prediction is not None:
                 result["prediction"] = max(0, min(100, int(regression_prediction * 100)))
                 result["key_factors"].append("ml_regression_model")
+                # Boost confidence when ML model is used successfully, but don't max out
+                result["confidence"] = round(min(0.95, result["confidence"] + 0.05), 3)
                 logger.info(f"Regression prediction successful: {result['prediction']}%")
             else:
                 logger.warning("Regression prediction returned None, using calculated score")
@@ -286,19 +357,17 @@ def run_prediction(
         except Exception as e:
             logger.error(f"Regression prediction failed: {e}")
             result["key_factors"].append("calculated_fallback_error")
+            # Reduce confidence when ML model fails
+            result["confidence"] = max(0.1, result["confidence"] - 0.1)
         
         # Extract policy text and generate AI insights
         ai_insights = "AI insights are currently unavailable."
         try:
-            incident_description = form_data.get("incident_description", "")
             policy_text = extract_text_from_pdf(policy_document)
             
-            if policy_text and len(policy_text.strip()) > 20:
-                ai_insights = get_ai_insights(incident_description, policy_text)
-                logger.info("AI insights generated successfully")
-            else:
-                ai_insights = "Unable to analyze policy document. Please ensure you upload a valid policy document for detailed insights."
-                logger.warning("Policy text too short or empty")
+            # Generate insights using complete form data and policy text
+            ai_insights = get_ai_insights(form_data, policy_text)
+            logger.info("AI insights generated successfully using comprehensive form data")
                 
         except Exception as e:
             logger.error(f"AI insights generation failed: {e}")
@@ -306,15 +375,22 @@ def run_prediction(
         
         result["ai_insights"] = ai_insights
         
-        logger.info(f"Complete prediction pipeline finished. Final prediction: {result['prediction']}%")
+        # Calculate final confidence score as prediction * confidence
+        final_confidence_score = (result["prediction"] / 100.0) * result["confidence"]
+        result["confidence_score"] = round(final_confidence_score, 3)
+        
+        logger.info(f"Complete prediction pipeline finished. Final prediction: {result['prediction']}%, Confidence: {result['confidence']:.3f}, Confidence Score: {result['confidence_score']}")
         return result
         
     except Exception as e:
         logger.error(f"Prediction pipeline failed completely: {e}")
+        fallback_confidence = 0.5
+        fallback_prediction = 50
         return {
             "error": f"Prediction service temporarily unavailable: {str(e)}",
-            "prediction": 50,  # Neutral fallback
-            "confidence": 0.5,
+            "prediction": fallback_prediction,
+            "confidence": fallback_confidence,
+            "confidence_score": round((fallback_prediction / 100.0) * fallback_confidence, 3),
             "key_factors": ["service_error"],
             "ai_insights": "Unable to provide insights at this time."
         }

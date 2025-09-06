@@ -40,7 +40,7 @@ export default function ClaimsPage() {
           {/* Sidebar - Prediction Info Cards */}
           <div className="lg:col-span-1 space-y-6">
             {/* Prediction Accuracy Info */}
-            <Card className="sticky top-8">
+            <Card className="top-8">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Brain className="h-5 w-5 text-primary mr-2" />
@@ -56,7 +56,8 @@ export default function ClaimsPage() {
                         High Accuracy
                       </h4>
                       <p className="text-green-700">
-                        Based on 10,000+ Malaysian claims data
+                        Get insights from AI trained on policy documents from
+                        Malaysian insurance companies
                       </p>
                     </div>
                   </div>
@@ -118,30 +119,6 @@ export default function ClaimsPage() {
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                   <span>Witness statements available</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Processing Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <Clock className="h-5 w-5 text-blue-500 mr-2" />
-                  Processing Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-3">
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="font-medium">Standard Claims:</p>
-                  <p className="text-muted-foreground">7-14 days</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="font-medium">Complex Claims:</p>
-                  <p className="text-muted-foreground">30-60 days</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="font-medium">Total Loss:</p>
-                  <p className="text-muted-foreground">45-90 days</p>
                 </div>
               </CardContent>
             </Card>

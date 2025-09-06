@@ -7,6 +7,7 @@ InsureWiz is a comprehensive insurance platform that combines modern web technol
 - **🤖 AI Insurance Advisor**: Intelligent chatbot powered by LangChain and Google Gemini
 - **📊 Policy Comparison**: Compare different insurance policies and coverage options
 - **🔍 Claims Processing**: Streamlined claims submission and tracking
+- **🎯 Claim Success Predictor**: AI-powered prediction of insurance claim success rates
 - **🚗 Vehicle Validation**: Comprehensive vehicle information validation
 - **🎨 Modern UI**: Beautiful, responsive interface built with Next.js and Tailwind CSS
 - **💬 Real-time Chat**: Live AI assistance for insurance questions
@@ -134,6 +135,8 @@ Once the backend is running, visit:
 - `POST /api/chat` - Send message to AI advisor
 - `GET /api/conversations/{id}` - Get conversation history
 - `DELETE /api/conversations/{id}` - Delete conversation
+- `POST /api/advanced/claim` - Predict insurance claim success rate
+- `GET /api/advanced/health` - Claim predictor health check
 - `GET /health` - Health check
 
 ## 🎯 Usage
@@ -144,6 +147,14 @@ Once the backend is running, visit:
 2. Ask questions about insurance concepts, policies, or claims
 3. Get intelligent, contextual responses powered by Google Gemini
 4. Maintain conversation context across sessions
+
+### Claim Success Predictor
+
+1. Navigate to the Claims page
+2. Fill out the comprehensive 7-step form with incident details
+3. Upload policy documents and evidence files
+4. Get AI-powered prediction of claim success probability
+5. Receive detailed insights and recommendations
 
 ### Policy Comparison
 
