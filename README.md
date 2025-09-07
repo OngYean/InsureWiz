@@ -1,4 +1,5 @@
 # InsureWiz - AI-Powered Insurance Platform
+## Presented to You By **Hokkien Mee is Delicious**
 
 InsureWiz is a comprehensive insurance platform that combines modern web technologies with AI-powered assistance to help users understand insurance concepts, compare policies, and get expert advice.
 
@@ -6,13 +7,15 @@ InsureWiz is a comprehensive insurance platform that combines modern web technol
 
 **Track 3: Industry Collaboration**
 
-When buying or renewing car insurance online, users often mistype or enter incorrect vehicle details. Build a smart system that detects and corrects typos or inaccurate vehicle input specifications in real time.
+When buying or renewing car insurance online, users often mistype or enter incorrect vehicle details. These mistakes can delay policy approval, cause pricing errors, or even lead to invalid insurance coverage. 
+Build a smart system that detects and corrects typos or inaccurate vehicle input specifications in real time.
 
 ## 🚀 Features
+We not only solved the problem statement, but we also accomplished something beyond it!
 
+- **🔍 Input Error Detection & Auto Corrector**: Automated & AI-powered typo detection and correction with image references
 - **🤖 AI Insurance Advisor**: Intelligent chatbot powered by LangChain and Google Gemini
 - **📊 Policy Comparison**: Compare different insurance policies and coverage options
-- **🔍 Claims Processing**: Streamlined claims submission and tracking
 - **🎯 Claim Success Predictor**: AI-powered prediction of insurance claim success rates
 - **🚗 Vehicle Validation**: Comprehensive vehicle information validation
 - **🎨 Modern UI**: Beautiful, responsive interface built with Next.js and Tailwind CSS
@@ -23,7 +26,7 @@ When buying or renewing car insurance online, users often mistype or enter incor
 - **Frontend**: Next.js 15 with TypeScript, Tailwind CSS, and shadcn/ui components
 - **Backend**: FastAPI with Python, LangChain for AI integration
 - **AI**: Google Gemini Pro model via LangChain for intelligent responses
-- **Database**: In-memory storage (can be extended to PostgreSQL/MySQL)
+- **Database**: Supabase (can be extended to PostgreSQL/MySQL)
 
 ## 📋 Prerequisites
 
