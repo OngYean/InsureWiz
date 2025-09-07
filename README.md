@@ -2,6 +2,12 @@
 
 InsureWiz is a comprehensive insurance platform that combines modern web technologies with AI-powered assistance to help users understand insurance concepts, compare policies, and get expert advice.
 
+## 📌 Track Info
+
+**Track 3: Industry Collaboration**
+
+When buying or renewing car insurance online, users often mistype or enter incorrect vehicle details. Build a smart system that detects and corrects typos or inaccurate vehicle input specifications in real time.
+
 ## 🚀 Features
 
 - **🤖 AI Insurance Advisor**: Intelligent chatbot powered by LangChain and Google Gemini
